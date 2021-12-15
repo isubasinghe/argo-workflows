@@ -5,6 +5,7 @@ type CWLRequirements interface {
 }
 
 type DockerRequirement struct {
+	Class                 string // constant DockerRequirement
 	DockerPull            string
 	DockerLoad            string
 	DockerFile            string
@@ -18,17 +19,40 @@ type SoftwarePackage struct {
 	Version []string
 	Specs   []string
 }
+
 type SoftwareRequirement struct {
+	Class    string // constant SoftwareRequirement
 	Packages []SoftwarePackage
 }
 
 type LoadListingRequirement struct {
+	Class       string // constant LoadListingRequirement
 	LoadListing LoadListingEnum
 }
 
 type Dirent struct{}
 
+type InitialWorkDirRequirementListing interface {
+	isInitialWorkDirRequirementListing()
+}
+
 type InitialWorkDirRequirement struct {
+	Class   string // constant InitialWorkDirRequirement
+	Listing InitialWorkDirRequirementListing
+}
+
+type InlineJavascriptRequirement struct {
+	Class         string // constant InlineJavascriptRequirement
+	ExpressionLib *[]string
+}
+
+type SchemaDefRequirementType interface {
+	isSchemaDefRequirementType()
+}
+
+type SchemaDefRequirement struct {
+	Class string // constant SchemaDefRequirement
+	Types []SchemaDefRequirementType
 }
 
 type EnvironmentDef struct {
@@ -37,14 +61,151 @@ type EnvironmentDef struct {
 }
 
 type EnvVarRequirement struct {
+	Class  string // constant EnvVarRequirement
 	EnvDef []EnvironmentDef
 }
 
-func (_ *DockerRequirement) isCWLRequirement() {}
+type ShellCommandRequirement struct {
+	Class string // constant ShellCommandRequirement
+}
 
-type CommandlineInputParameterType interface{}
+type WorkReuse struct {
+	Class       string // constant WorkReuse
+	enableReuse CWLExpressionBool
+}
 
-type CommandlineBindingPosition interface{}
+type NetworkAccess struct {
+	Class         string // constant NetworkAccess
+	NetworkAccess CWLExpressionBool
+}
+
+type InplaceUpdateRequirement struct {
+	Class         string // constant InplaceUpdateRequirement
+	InplaceUpdate Bool
+}
+
+type ToolTimeLimit struct {
+	Class     string // constant ToolTimeLimit
+	TimeLimit CWLExpressionInt
+}
+
+type ResourceRequirement struct {
+	Class     string // constand ResourceRequirement
+	CoresMin  *CWLExpressionNum
+	CoresMax  *CWLExpressionNum
+	RamMin    *CWLExpressionNum
+	RamMax    *CWLExpressionNum
+	TmpDirMin *CWLExpressionNum
+	TmpDirMax *CWLExpressionNum
+	OutdirMin *CWLExpressionNum
+	OutdirMax *CWLExpressionNum
+}
+
+func (_ InlineJavascriptRequirement) isCWLRequirement() {}
+func (_ SchemaDefRequirement) isCWLRequirement()        {}
+func (_ LoadListingRequirement) isCWLRequirement()      {}
+func (_ DockerRequirement) isCWLRequirement()           {}
+func (_ SoftwareRequirement) isCWLRequirement()         {}
+func (_ InitialWorkDirRequirement) isCWLRequirement()   {}
+func (_ EnvVarRequirement) isCWLRequirement()           {}
+func (_ ShellCommandRequirement) isCWLRequirement()     {}
+func (_ WorkReuse) isCWLRequirement()                   {}
+func (_ NetworkAccess) isCWLRequirement()               {}
+func (_ InplaceUpdateRequirement) isCWLRequirement()    {}
+func (_ ToolTimeLimit) isCWLRequirement()               {}
+
+func (_ CommandlineInputRecordSchema) isSchemaDefRequirementType() {}
+func (_ CommandlineInputEnumSchema) isSchemaDefRequirementType()   {}
+func (_ CommandlineInputArraySchema) isSchemaDefRequirementType()  {}
+func (_ DockerRequirement) isSchemaDefRequirementType()            {}
+func (_ SoftwareRequirement) isSchemaDefRequirementType()          {}
+func (_ InitialWorkDirRequirement) isSchemaDefRequirementType()    {}
+
+type CommandlineInputRecordFieldType interface {
+	isCommandlineInputRecordFieldType()
+}
+
+func (_ CWLNull) isCommandlineInputRecordFieldType()                      {}
+func (_ CWLBool) isCommandlineInputRecordFieldType()                      {}
+func (_ CWLInt) isCommandlineInputRecordFieldType()                       {}
+func (_ CWLLong) isCommandlineInputRecordFieldType()                      {}
+func (_ CWLFloat) isCommandlineInputRecordFieldType()                     {}
+func (_ CWLDouble) isCommandlineInputRecordFieldType()                    {}
+func (_ CWLString) isCommandlineInputRecordFieldType()                    {}
+func (_ CWLFile) isCommandlineInputRecordFieldType()                      {}
+func (_ CWLDirectory) isCommandlineInputRecordFieldType()                 {}
+func (_ CommandlineInputRecordSchema) isCommandlineInputRecordFieldType() {}
+func (_ CommandlineInputArraySchema) isCommandlineInputRecordFieldType()  {}
+func (_ CommandlineInputEnumSchema) isCommandlineInputRecordFieldType()   {}
+
+type CommandlineInputRecordField struct {
+	Name           string
+	Type           []CommandlineInputRecordFieldType // len(1) represents scalar len > 1 represents array
+	Doc            []string
+	Label          string
+	SecondaryFiles []CWLSecondaryFileSchema
+	Streamable     bool
+	Format         CWLFormat
+	LoadContents   bool
+	LoadListing    LoadListingEnum
+	InputBinding   CommandlineBinding
+}
+
+type CommandlineInputArraySchemaType interface {
+	isCommandlineInputArraySchemaType()
+}
+
+func (_ CWLNull) isCommandlineInputArraySchemaType() {}
+
+type CommandlineInputArraySchema struct {
+	Items        CommandlineInputArraySchemaType
+	Type         string // MUST be array
+	Label        string
+	Doc          []string
+	Name         string
+	InputBinding CommandlineBinding
+}
+
+type CommandlineInputEnumSchema struct {
+	Symbols      []string
+	Type         string // MUST BE enum, only a placeholder for type verification purposes
+	Label        string
+	Doc          []string
+	Name         string
+	InputBinding CommandlineBinding
+}
+
+type CommandlineInputRecordSchema struct {
+	Type         string // MUST BE "record"
+	Fields       []CommandlineInputRecordField
+	Label        string
+	Doc          []string
+	Name         string
+	inputBinding CommandlineBinding
+}
+
+type CommandlineInputParameterType interface {
+	isCLIParamType()
+}
+
+func (_ CWLNull) isCLIParamType()                      {}
+func (_ CWLBool) isCLIParamType()                      {}
+func (_ CWLInt) isCLIParamType()                       {}
+func (_ CWLLong) isCLIParamType()                      {}
+func (_ CWLFloat) isCLIParamType()                     {}
+func (_ CWLDouble) isCLIParamType()                    {}
+func (_ CWLString) isCLIParamType()                    {}
+func (_ CWLFile) isCLIParamType()                      {}
+func (_ CWLDirectory) isCLIParamType()                 {}
+func (_ CWLStdin) isCLIParamType()                     {}
+func (_ CommandlineInputRecordSchema) isCLIParamType() {}
+func (_ CommandlineInputEnumSchema) isCLIParamType()   {}
+func (_ CommandlineInputArraySchema) isCLIParamType()  {}
+func (_ String) isCLIParamType()                       {}
+
+type CommandlineBindingPosition interface {
+	isCLIBindingPosition()
+}
 
 type CommandlineBinding struct {
 	LoadContents  bool
@@ -57,17 +218,17 @@ type CommandlineBinding struct {
 }
 
 type CommandlineInputParameter struct {
-	Type           CommandlineInputParameterType
-	Label          string
-	SecondaryFiles int // TODO
-	Streamable     bool
-	Doc            string
-	Id             string
-	Format         CWLFormat
-	LoadContents   bool
-	LoadListing    LoadListingEnum
-	Default        interface{}
-	InputBinding   CommandlineBinding
+	Type           []CommandlineInputParameterType // len(1) == scalar while len > 1 == array
+	Label          *string
+	SecondaryFiles *[]CWLSecondaryFileSchema // len(1) == scalar while len > 1 == array
+	Streamable     *bool
+	Doc            *string
+	Id             *string
+	Format         *CWLFormat
+	LoadContents   *bool
+	LoadListing    *LoadListingEnum
+	Default        *interface{}
+	InputBinding   *CommandlineBinding
 }
 
 type CommandlineOutputBindingGlob interface{}
@@ -82,7 +243,7 @@ type CommandlineOutputBinding struct {
 type CommandlineOutputParameter struct {
 	Type           CommandlineInputParameterType
 	Label          string
-	SecondaryFiles int // TODO
+	SecondaryFiles []CWLSecondaryFileSchema
 	Streamable     bool
 	Doc            string
 	Id             string
@@ -90,19 +251,27 @@ type CommandlineOutputParameter struct {
 	OutputBinding  CommandlineOutputBinding
 }
 
-type CommandlineArguments interface{}
+type CommandlineArgument interface {
+	isCommandlineArguement()
+}
 
-type CWLExpressionString interface{}
+func (_ String) isCommandlineArguement()             {}
+func (_ CWLExpression) isCommandlineArguement()      {}
+func (_ CommandlineBinding) isCommandlineArguement() {}
 
 type CommandlineTool struct {
 	Inputs       []CommandlineInputParameter
 	Outputs      []CommandlineOutputParameter
-	BaseCommand  []string
+	Class        string // Must be "CommandLineTool"
 	Id           string
 	Label        string
 	Doc          []string
 	Requirements []CWLRequirements
-	Arguments    []CommandlineArguments
+	Hints        []interface{}
+	CWLVersion   string
+	Intent       []string
+	BaseCommand  []string
+	Arguments    []CommandlineArgument
 	Stdin        CWLExpressionString
 	Stderr       CWLExpressionString
 	Stdout       CWLExpressionString

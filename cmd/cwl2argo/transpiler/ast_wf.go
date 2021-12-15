@@ -1,10 +1,5 @@
 package transpiler
 
-type LoadListingEnum interface{}
-type NoListing struct{}
-type ShallowListing struct{}
-type DeepListing struct{}
-
 type InputEnumSchema struct {
 	Symbols []string
 	Label   string
@@ -22,7 +17,7 @@ type InputRecordField struct {
 	Type           CWLType
 	Doc            string
 	Label          string
-	SecondaryFiles int // TODO
+	SecondaryFiles CWLSecondaryFileSchema
 	Streamable     bool
 	Format         CWLFormat
 	LoadContents   bool
@@ -44,7 +39,7 @@ type InputBinding struct {
 type WorkflowInputParameter struct {
 	Type           WorkflowInputParameterType
 	Label          string
-	SecondaryFiles int //TODO
+	SecondaryFiles CWLSecondaryFileSchema
 	Streamable     bool
 	Doc            string
 	Id             string
@@ -57,9 +52,9 @@ type WorkflowInputParameter struct {
 
 type WorkflowOutputParameterType interface{}
 
+type LinkMergeMethod interface{}
 type MergeNested struct{}
 type MergeFlattened struct{}
-type LinkMergeMethod interface{}
 
 type FirstNonNull struct{}
 type TheOnlyNonNull struct{}
@@ -69,7 +64,7 @@ type PickValueMethod interface{}
 type WorkflowOutputParameter struct {
 	Type           WorkflowOutputParameterType
 	Label          string
-	SecondaryFiles int //TODO
+	SecondaryFiles CWLSecondaryFileSchema
 	Streamable     bool
 	Doc            string
 	Id             string
