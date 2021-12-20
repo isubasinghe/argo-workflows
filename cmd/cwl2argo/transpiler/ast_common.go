@@ -61,22 +61,22 @@ type LoadListingEnum interface {
 }
 type NoListing struct{}
 
-func (_ NoListing) isLoadListingEnum()
+func (_ NoListing) isLoadListingEnum() {}
 
 type ShallowListing struct{}
 
-func (_ ShallowListing) isLoadListingEnum()
+func (_ ShallowListing) isLoadListingEnum() {}
 
 type DeepListing struct{}
 
-func (_ DeepListing) isLoadListingEnum()
+func (_ DeepListing) isLoadListingEnum() {}
 
 type CWLClass interface {
 }
 
 type CWLExpression struct {
 	Pattern  CWLExpressionString
-	Required bool
+	Required CWLExpressionBool
 }
 
 type CWLExpressionString interface {

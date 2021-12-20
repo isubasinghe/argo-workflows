@@ -1,0 +1,5 @@
+package transpiler
+
+func EmitArgo() {
+
+}
