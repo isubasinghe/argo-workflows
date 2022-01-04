@@ -1,12 +1,14 @@
 package main
 
 import (
-	"cwl2argo/commands"
 	"os"
 	"os/exec"
+
+	"github.com/argoproj/argo-workflows/v3/cmd/cwl2argo/commands"
 )
 
 func main() {
+
 	err := commands.NewRootCommand().Execute()
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {

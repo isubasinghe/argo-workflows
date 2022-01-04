@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"github.com/argoproj/argo-workflows/v3/util/cmd"
+	"github.com/argoproj/pkg/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +20,8 @@ func init() {
 }
 
 func initConfig() {
-
+	cmd.SetLogFormatter(logFormat)
+	cli.SetLogLevel(logLevel)
 }
 
 func NewRootCommand() *cobra.Command {

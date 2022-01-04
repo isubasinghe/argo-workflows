@@ -1,59 +1,93 @@
 package transpiler
 
 import (
+	"encoding/json"
+	"errors"
+	"os"
+
 	"github.com/kr/pretty"
 	log "github.com/sirupsen/logrus"
-	"github.com/uc-cdis/mariner/wflib"
+	"gopkg.in/yaml.v3"
 )
 
 const (
 	CWLVersion = "v1.0"
 )
 
-func validateWorkflow(wf *wflib.WorkflowJSON) {
+func TranspileFile(inputFile string, inputsFile string, outputFile string) error {
 
-}
+	log.Warn("Currently the transpiler expects preprocessed CWL input, sbpack is the recommended way of preprocessing, use cwlpack from here https://github.com/rabix/sbpack/tree/84bd7867a0630a826280a702db715377aa879f6a")
+	var cwl map[string]interface{}
+	var inputs map[string]interface{}
 
-type WorkflowErrors struct {
-	GeneralErrors []string
-	FileErrors    map[string][]string
-}
-
-type Validator struct {
-	Workflow   *wflib.WorkflowJSON
-	mainExists bool
-}
-
-func (vl *Validator) validate() {
-
-}
-
-func (vl *Validator) Validate() {
-	werr := &WorkflowErrors{
-		GeneralErrors: make([]string, 2),
-		FileErrors:    make(map[string][]string),
-	}
-	if vl.Workflow.Graph == nil {
-		log.Error("$graph was not found in Workflow")
-	}
-	if vl.Workflow.CWLVersion != CWLVersion {
-		log.Errorf("CWL version not correct, %s accepted but %s received", CWLVersion, vl.Workflow.CWLVersion)
-	}
-	for _, entry := range *vl.Workflow.Graph {
-		if entry["id"] == "#main" {
-			pretty.Println(entry)
-		}
-	}
-	_ = werr
-}
-
-func ToCWLDocument(wf wflib.WorkflowJSON) {}
-
-func TranspileFile(inputFile string, outputFile string) error {
-	data, err := wflib.PackWorkflow(inputFile)
+	def, err := os.ReadFile(inputFile)
 	if err != nil {
 		return err
 	}
-	_ = data
+
+	err = yaml.Unmarshal(def, &cwl)
+	if err != nil {
+		return err
+	}
+
+	data, err := os.ReadFile(inputsFile)
+	if err != nil {
+		return err
+	}
+
+	err = yaml.Unmarshal(data, &inputs)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := cwl["class"]; !ok {
+		return errors.New("<class> expected")
+	}
+
+	switch cwl["class"] {
+	case "CommandLineTool":
+		log.Info("Transpiling CommandLineTool")
+		tool, err := FillCommandlineTool(cwl)
+		if err != nil {
+			return err
+		}
+		pretty.Println(tool)
+	case "Workflow":
+		return errors.New("Workflows have not been implemented yet")
+
+	default:
+		return errors.New("")
+	}
+
+	pretty.Println(cwl)
+	pretty.Println("\n\n")
+	pretty.Println(inputs)
+
+	cliTool, err := FillCommandlineTool(cwl)
+	if err != nil {
+		return err
+	}
+	err = TypeCheckCommandlineTool(cliTool, inputs)
+	pretty.Println(cliTool)
+
+	wf, err := EmitArgo(cliTool)
+	if err != nil {
+		return err
+	}
+	by, err := json.Marshal(&wf)
+	if err != nil {
+		return err
+	}
+	dynYaml := make(map[string]interface{})
+	err = yaml.Unmarshal(by, dynYaml)
+	if err != nil {
+		return err
+	}
+	by, err = yaml.Marshal(dynYaml)
+	if err != nil {
+		return err
+	}
+	pretty.Println(string(by))
+
 	return nil
 }

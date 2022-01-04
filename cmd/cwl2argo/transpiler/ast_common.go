@@ -15,39 +15,23 @@ func (_ Strings) isCWLFormat()       {}
 func (_ CWLExpression) isCWLFormat() {}
 
 type CWLNull struct{}
-
-func (_ CWLNull) isCWLType() {}
-
 type CWLBool struct{}
-
-func (_ CWLBool) isCWLType() {}
-
 type CWLInt struct{}
-
-func (_ CWLInt) isCWLType() {}
-
 type CWLLong struct{}
-
-func (_ CWLLong) isCWLType() {}
-
 type CWLFloat struct{}
-
-func (_ CWLFloat) isCWLType() {}
-
 type CWLDouble struct{}
-
-func (_ CWLDouble) isCWLType() {}
-
 type CWLString struct{}
-
-func (_ CWLString) isCWLType() {}
-
 type CWLFile struct{}
-
-func (_ CWLFile) isCWLType() {}
-
 type CWLDirectory struct{}
 
+func (_ CWLNull) isCWLType()      {}
+func (_ CWLBool) isCWLType()      {}
+func (_ CWLInt) isCWLType()       {}
+func (_ CWLLong) isCWLType()      {}
+func (_ CWLFloat) isCWLType()     {}
+func (_ CWLDouble) isCWLType()    {}
+func (_ CWLString) isCWLType()    {}
+func (_ CWLFile) isCWLType()      {}
 func (_ CWLDirectory) isCWLType() {}
 
 type CWLStdin struct{}
@@ -75,8 +59,7 @@ type CWLClass interface {
 }
 
 type CWLExpression struct {
-	Pattern  CWLExpressionString
-	Required CWLExpressionBool
+	Expression string
 }
 
 type CWLExpressionString interface {
@@ -110,7 +93,7 @@ func (_ CWLExpression) isCWLExpressionNum() {}
 
 type CWLSecondaryFileSchema struct {
 	Pattern  CWLExpressionString
-	Required bool
+	Required CWLExpressionBool
 }
 
 type CWLDefinition struct {

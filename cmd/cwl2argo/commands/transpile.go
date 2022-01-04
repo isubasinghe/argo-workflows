@@ -1,11 +1,11 @@
 package commands
 
 import (
-	"cwl2argo/transpiler"
 	"errors"
 	"fmt"
 	"path/filepath"
 
+	"github.com/argoproj/argo-workflows/v3/cmd/cwl2argo/transpiler"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +25,7 @@ func extractNoExtFileName(filename string, ext string) (string, error) {
 	return name, nil
 }
 
-func processFile(inputFile string) {
+func processFile(inputFile string, inputsFile string) {
 
 	ext := filepath.Ext(inputFile)
 	if ext != ".cwl" {
@@ -37,7 +37,7 @@ func processFile(inputFile string) {
 	}
 	newName := fmt.Sprintf("argo_%s.yaml", name)
 	log.Infof("Transpiling file %s with extension %s and ext free name %s to %s", inputFile, ext, name, newName)
-	err = transpiler.TranspileFile(inputFile, newName)
+	err = transpiler.TranspileFile(inputFile, inputsFile, newName)
 	if err != nil {
 		log.Fatalf("%+v", err)
 	}
@@ -57,7 +57,7 @@ func NewTranspileCommand() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			processFile(args[0])
+			processFile(args[0], args[1])
 		},
 	}
 

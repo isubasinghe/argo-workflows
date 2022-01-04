@@ -71,7 +71,34 @@ func TypeCheckCommandlineHints(id *string, hints []interface{}) error {
 	return nil
 }
 
-func TypeCheckCommandlineTool(cl CommandlineTool) error {
+func TypeCheckCLICWLVersion(id *string, cwlVersion *string) error {
+	// allowed to be nil
+	if cwlVersion == nil {
+		return nil
+	}
+	if cwlVersion != nil && *cwlVersion == CWLVersion {
+		return nil
+	}
+	if id != nil {
+		return fmt.Errorf("In %s cwlVerion provided was %s but %s was expected", *id, *cwlVersion, CWLVersion)
+	} else {
+		return fmt.Errorf("cwlVersion provided was %s but %s was expected", *cwlVersion, CWLVersion)
+	}
+}
+
+func TypeCheckBaseCommand(id *string, baseCommand []string, arguments []CommandlineArgument) error {
+
+	if len(baseCommand) > 0 || len(arguments) > 0 {
+		return nil
+	}
+	if id != nil {
+		return fmt.Errorf("In %s len(baseCommand) == 0 and len(arguments) was not > 0", *id)
+	} else {
+		return errors.New("If len(baseCommand) == 0 then len(arguments) must be > 0")
+	}
+}
+
+func TypeCheckCommandlineTool(cl *CommandlineTool, inputs map[string]interface{}) error {
 	var err error
 
 	err = TypeCheckCommandlineInputs(cl.Inputs)
@@ -90,6 +117,21 @@ func TypeCheckCommandlineTool(cl CommandlineTool) error {
 	}
 
 	err = TypeCheckCommandlineRequirements(cl.Id, cl.Requirements)
+	if err != nil {
+		return err
+	}
+
+	err = TypeCheckCommandlineHints(cl.Id, cl.Hints)
+	if err != nil {
+		return err
+	}
+
+	err = TypeCheckCLICWLVersion(cl.Id, cl.CWLVersion)
+	if err != nil {
+		return nil
+	}
+
+	err = TypeCheckBaseCommand(cl.Id, cl.BaseCommand, cl.Arguments)
 	if err != nil {
 		return err
 	}
