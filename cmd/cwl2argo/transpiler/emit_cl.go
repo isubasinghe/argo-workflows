@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"sort"
 
 	v1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	log "github.com/sirupsen/logrus"
@@ -15,6 +14,25 @@ const (
 	ArgoType    = "Workflow"
 	ArgoVersion = "argoproj.io/v1alpha1"
 )
+
+// de-sum typed "CommandlineInputParameter"
+type flatCommandlineInputParameter struct {
+	Type           Type
+	Label          *string
+	Value          *string
+	SecondaryFiles *SecondaryFiles
+	Streamable     *bool
+	Doc            Strings
+	Id             *string
+	Format         *CWLFormat
+	LoadContents   *bool
+	LoadListing    *LoadListingEnum
+	InputBinding   *CommandlineBinding
+}
+
+type ParamTranslater interface {
+	TranslateToParam(*CommandlineBinding) ([]v1.Parameter, error)
+}
 
 func emitDockerRequirement(container *apiv1.Container, d *DockerRequirement) error {
 	tmpContainer := container.DeepCopy()
@@ -123,64 +141,58 @@ func evalArgument(arg CommandlineArgument) (*string, error) {
 	}
 }
 
-type bindingTuple struct {
-	commandlineBinding CommandlineBinding
-	Kind               Type
-	Key                string
-	value              string
-}
-
 type inputBindingRetriever interface {
-	GetInputBindings(inputs map[string]interface{}) ([]bindingTuple, error)
+	GetInputBindings(inputs map[string]interface{}) ([]flatCommandlineInputParameter, error)
 }
 
-func (inputParameter CommandlineInputParameter) GetInputBindings(inputs map[string]interface{}) ([]bindingTuple, error) {
-	bindings := make([]bindingTuple, 0)
+func (inputParameter CommandlineInputParameter) GetInputBindings(inputs map[string]interface{}) ([]flatCommandlineInputParameter, error) {
+	bindings := make([]flatCommandlineInputParameter, 0)
+	foundTy := false
+
+	if inputParameter.Id == nil {
+		return nil, errors.New("input parameter is nil")
+	}
+
+	inputi, ok := inputs[*inputParameter.Id]
+	if !ok {
+		return nil, fmt.Errorf("%s was not present in input", *inputParameter.Id)
+	}
+
+	binding := flatCommandlineInputParameter{
+		SecondaryFiles: &inputParameter.SecondaryFiles,
+		Streamable:     inputParameter.Streamable,
+		Doc:            inputParameter.Doc,
+		Id:             inputParameter.Id,
+		Format:         inputParameter.Format,
+	}
 	for _, ty := range inputParameter.Type {
-		if inputParameter.Id == nil {
-			return nil, errors.New("input parameter is nil")
-		}
-
-		inputi, ok := inputs[*inputParameter.Id]
-		if !ok {
-			return nil, fmt.Errorf("%s was not present in input", *inputParameter.Id)
-		}
-
 		switch ty.Kind {
 		case CWLStringKind:
 			value, ok := inputi.(string)
 			if !ok {
-				return nil, errors.New("Invalid type")
+				continue
 			}
-			pair := bindingTuple{*inputParameter.InputBinding, CWLStringKind, *inputParameter.Id, value}
-			bindings = append(bindings, pair)
+			binding.Type = CWLStringKind
+			binding.Value = &value
+			foundTy = true
+			bindings = append(bindings, binding)
 		default:
 			return nil, fmt.Errorf("Invalid type %T", inputi)
 		}
-
+	}
+	if !foundTy {
+		return nil, fmt.Errorf("Valid type was not present in input for %s", *inputParameter.Id)
 	}
 	return bindings, nil
 }
 
-func sortInputBindingPairsByPosition(boundingPairs []bindingTuple) {
-	sort.Slice(boundingPairs, func(i, j int) bool {
-		left := boundingPairs[i]
-		right := boundingPairs[j]
-		if left.commandlineBinding.Position == nil {
-			return true
-		}
-		if right.commandlineBinding.Position == nil {
-			return false
-		}
-		return *left.commandlineBinding.Position < *right.commandlineBinding.Position
-	})
-}
+func sortInputBindingsByPosition() {}
 
 func emitArgumentParams(container *apiv1.Container,
 	inputBindings Inputs,
 	baseCommand Strings,
 	arguments Arguments,
-	inputs map[string]interface{}) ([]bindingTuple, error,
+	inputs map[string]interface{}) ([]flatCommandlineInputParameter, error,
 ) {
 	cmds := make([]string, 0)
 	skip := false
@@ -212,7 +224,7 @@ func emitArgumentParams(container *apiv1.Container,
 		cmds = append(cmds, *cmd)
 	}
 
-	bindings := make([]bindingTuple, 0)
+	bindings := make([]flatCommandlineInputParameter, 0)
 
 	for _, inputBinding := range inputBindings {
 		newBindings, err := inputBinding.GetInputBindings(inputs)
@@ -221,7 +233,6 @@ func emitArgumentParams(container *apiv1.Container,
 		}
 		bindings = append(bindings, newBindings...)
 	}
-	sortInputBindingPairsByPosition(bindings)
 
 	args := make([]string, 0)
 	for _, pair := range bindings {

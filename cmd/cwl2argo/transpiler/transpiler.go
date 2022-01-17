@@ -15,6 +15,10 @@ const (
 )
 
 func TranspileCommandlineTool(cl CommandlineTool, inputs map[string]interface{}, outputFile string) error {
+	err := TypeCheckCommandlineTool(&cl, inputs)
+	if err != nil {
+		return err
+	}
 	wf, err := EmitCommandlineTool(&cl, inputs)
 	if err != nil {
 		return err
