@@ -1,0 +1,11 @@
+{
+  "inputs": {
+    "example_file": {
+      "name": "ischeme-wasm.js",
+      "type": "http",
+      "http": {
+        "url": "https://isub.dev/ischeme-wasm.js"
+      }
+    }
+  }
+}

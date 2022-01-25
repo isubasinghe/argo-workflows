@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+    creationTimestamp: null
+    name: echo-tool
+spec:
+    arguments:
+        parameters:
+            - name: message
+              value: hello
+    entrypoint: echo-tool
+    templates:
+        - container:
+            args:
+                - '{{inputs.parameters.message}}'
+            command:
+                - echo
+            image: ubuntu:20.04
+            name: ""
+            resources: {}
+          inputs:
+            parameters:
+                - name: message
+          metadata: {}
+          name: echo-tool
+          outputs: {}
+status:
+    finishedAt: null
+    startedAt: null

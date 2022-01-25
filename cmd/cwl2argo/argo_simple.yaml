@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+    creationTimestamp: null
+    name: asd
+spec:
+    arguments: {}
+    entrypoint: template-name
+    templates:
+        - container:
+            args:
+                - whale.txt
+            command:
+                - cat
+            image: ubuntu:20.04
+            name: ""
+            resources: {}
+          inputs:
+            artifacts:
+                - http:
+                    url: https://isub.dev/ischeme-wasm.js
+                  name: ischeme-wasm.js
+                  path: whale.txt
+          metadata: {}
+          name: template-name
+          outputs: {}
+status:
+    finishedAt: null
+    startedAt: null
