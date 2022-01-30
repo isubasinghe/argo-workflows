@@ -118,6 +118,7 @@ func (WorkReuse) isCWLRequirement()                   {}
 func (NetworkAccess) isCWLRequirement()               {}
 func (InplaceUpdateRequirement) isCWLRequirement()    {}
 func (ToolTimeLimit) isCWLRequirement()               {}
+func (ResourceRequirement) isCWLRequirement()         {}
 
 func (CommandlineInputRecordSchema) isSchemaDefRequirementType() {}
 func (CommandlineInputEnumSchema) isSchemaDefRequirementType()   {}
@@ -228,7 +229,7 @@ const (
 
 type CommandlineOutputBindingGlob struct {
 	Kind       OutputBindingGlobKind
-	String     String
+	String     *String
 	Strings    Strings
 	Expression CWLExpression
 }

@@ -1,2 +1,8 @@
 example_file:
   class: File
+  path: whale.txt
+
+example_flag: true
+example_string: Hello World
+
+example_int: 42

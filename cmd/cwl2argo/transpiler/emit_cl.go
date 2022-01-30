@@ -20,11 +20,12 @@ const (
 type flatCommandlineInputParameter struct {
 	Type             Type
 	Label            *string
-	Value            *string
-	Emit             bool
-	File             *CWLFile
-	FileLocationData *FileLocationData
-	SecondaryFiles   *SecondaryFiles
+	StringValue      *string           // string value
+	IntValue         *int              // int value
+	Emit             bool              // boolean value
+	File             *CWLFile          // file value
+	FileLocationData *FileLocationData // file location data
+	SecondaryFiles   SecondaryFiles
 	Streamable       *bool
 	Doc              Strings
 	Id               *string
@@ -32,6 +33,18 @@ type flatCommandlineInputParameter struct {
 	LoadContents     *bool
 	LoadListing      *LoadListingEnum
 	InputBinding     *CommandlineBinding
+}
+
+type flatCommandlineOutputParameter struct {
+	Type             Type
+	Label            *string
+	FileLocationData *FileLocationData
+	SecondaryFiles   SecondaryFiles
+	Streamable       *bool
+	Doc              Strings
+	Id               *string
+	Format           *CWLFormat
+	OutputBinding    *CommandlineBinding
 }
 
 type ParamTranslater interface {
@@ -69,12 +82,13 @@ func emitInputParam(input flatCommandlineInputParameter) (*v1alpha1.Parameter, e
 	return &param, nil
 }
 
-func dockerNotPresent() error { return errors.New("DockerRequirement was not found") }
+func dockerNotPresent() error              { return errors.New("DockerRequirement was not found") }
+func resourceRequirementNotPresent() error { return errors.New("ResourceRequirement was not found") }
 
-func findDockerRequirement(clTool *CommandlineTool) (*DockerRequirement, error) {
+func findDockerRequirement(requirements Requirements) (*DockerRequirement, error) {
 	var docker *DockerRequirement
 	docker = nil
-	for _, req := range clTool.Requirements {
+	for _, req := range requirements {
 		d, ok := req.(DockerRequirement)
 		if ok {
 			log.Info("Found DockerRequirement")
@@ -86,6 +100,23 @@ func findDockerRequirement(clTool *CommandlineTool) (*DockerRequirement, error) 
 		return docker, nil
 	} else {
 		return nil, dockerNotPresent()
+	}
+}
+
+func findResourceRequirement(requirements Requirements) (*ResourceRequirement, error) {
+	var resource *ResourceRequirement
+	resource = nil
+	for _, req := range requirements {
+		r, ok := req.(ResourceRequirement)
+		if ok {
+			log.Info("Found ResourceRequirement")
+			resource = &r
+		}
+	}
+	if resource != nil {
+		return resource, nil
+	} else {
+		return nil, resourceRequirementNotPresent()
 	}
 }
 
@@ -133,7 +164,7 @@ func (inputParameter CommandlineInputParameter) getInputBindings(inputs map[stri
 	}
 
 	binding := flatCommandlineInputParameter{
-		SecondaryFiles: &inputParameter.SecondaryFiles,
+		SecondaryFiles: inputParameter.SecondaryFiles,
 		Streamable:     inputParameter.Streamable,
 		Doc:            inputParameter.Doc,
 		Id:             inputParameter.Id,
@@ -150,10 +181,9 @@ func (inputParameter CommandlineInputParameter) getInputBindings(inputs map[stri
 	binding.Type = input.Kind
 	switch input.Kind {
 	case CWLStringKind:
-		binding.Value = input.StringData
+		binding.StringValue = input.StringData
 	case CWLIntKind:
-		strValue := fmt.Sprintf("%d", *input.IntData)
-		binding.Value = &strValue
+		binding.IntValue = input.IntData
 	case CWLFileKind:
 		binding.File = input.FileData
 	default:
@@ -179,8 +209,7 @@ func sortBindingsByPosition(bindings []flatCommandlineInputParameter) {
 func emitArgumentParams(container *apiv1.Container,
 	baseCommand Strings,
 	arguments Arguments,
-	bindings []flatCommandlineInputParameter,
-	inputs map[string]CWLInputEntry) error {
+	bindings []flatCommandlineInputParameter) error {
 	cmds := make([]string, 0)
 	skip := false
 
@@ -258,7 +287,10 @@ func emitArguments(spec *v1alpha1.WorkflowSpec, bindings []flatCommandlineInputP
 	for _, binding := range bindings {
 		switch binding.Type {
 		case CWLStringKind:
-			params = append(params, v1alpha1.Parameter{Name: *binding.Id, Value: (*v1alpha1.AnyString)(binding.Value)})
+			params = append(params, v1alpha1.Parameter{Name: *binding.Id, Value: (*v1alpha1.AnyString)(binding.StringValue)})
+		case CWLIntKind:
+			intString := fmt.Sprintf("%d", *binding.IntValue)
+			params = append(params, v1alpha1.Parameter{Name: *binding.Id, Value: (*v1alpha1.AnyString)(&intString)})
 		default:
 			return fmt.Errorf("%T is not supported", binding.Type)
 		}
@@ -299,6 +331,19 @@ func filterParams(inputs []flatCommandlineInputParameter) []flatCommandlineInput
 	return newInputs
 }
 
+func needPVC(outputs []flatCommandlineInputParameter) bool {
+	for _, binding := range outputs {
+		if binding.Type == CWLFileKind {
+			return true
+		}
+	}
+	return false
+}
+
+func emitPVC() {
+
+}
+
 func emitInputArtifacts(template *v1alpha1.Template, inputs map[string]CWLInputEntry, locations FileLocations) error {
 	arts := make([]v1alpha1.Artifact, 0)
 
@@ -322,6 +367,10 @@ func emitInputArtifacts(template *v1alpha1.Template, inputs map[string]CWLInputE
 	return nil
 }
 
+func emitOutputArtifact() error {
+	return nil
+}
+
 func EmitCommandlineTool(clTool *CommandlineTool, inputs map[string]CWLInputEntry, locations FileLocations) (*v1alpha1.Workflow, error) {
 	var wf v1alpha1.Workflow
 	var err error
@@ -333,7 +382,7 @@ func EmitCommandlineTool(clTool *CommandlineTool, inputs map[string]CWLInputEntr
 
 	container := apiv1.Container{}
 
-	dockerRequirement, err := findDockerRequirement(clTool)
+	dockerRequirement, err := findDockerRequirement(clTool.Requirements)
 	if err != nil {
 		return nil, err
 	}
@@ -359,14 +408,25 @@ func EmitCommandlineTool(clTool *CommandlineTool, inputs map[string]CWLInputEntr
 		return nil, err
 	}
 
-	err = emitArgumentParams(&container, clTool.BaseCommand, clTool.Arguments, bindings, inputs)
+	err = emitArgumentParams(&container, clTool.BaseCommand, clTool.Arguments, bindings)
 	if err != nil {
 		return nil, err
 	}
 
-	emitArguments(&spec, bindings)
+	err = emitArguments(&spec, paramBindings)
+	if err != nil {
+		return nil, err
+	}
 
-	emitInputArtifacts(&template, inputs, locations)
+	err = emitInputArtifacts(&template, inputs, locations)
+	if err != nil {
+		return nil, err
+	}
+
+	err = emitOutputArtifact()
+	if err != nil {
+		return nil, err
+	}
 
 	spec.Templates = []v1alpha1.Template{template}
 	spec.Entrypoint = template.Name
