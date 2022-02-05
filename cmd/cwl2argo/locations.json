@@ -1,10 +1,17 @@
 {
   "inputs": {
-    "example_file": {
-      "name": "ischeme-wasm",
+    "tarfile": {
+      "name": "tarfile",
       "type": "http",
       "http": {
-        "url": "https://isub.dev/ischeme-wasm.js"
+        "url": "https://data-isubasinghe.vercel.app/hello.tar"
+      }
+    }
+  }, 
+  "outptus": {
+    "textfile": {
+      "name": "textfile", 
+      "s3": {
       }
     }
   }

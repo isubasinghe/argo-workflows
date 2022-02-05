@@ -101,7 +101,7 @@ type ResourceRequirement struct {
 	RamMin    *CWLExpression `yaml:"ramMin"`
 	RamMax    *CWLExpression `yaml:"ramMax"`
 	TmpdirMin *CWLExpression `yaml:"tmpdirMin"`
-	TmpdirMax *CWLExpression `yaml:"tmpdirMin"`
+	TmpdirMax *CWLExpression `yaml:"tmpdirMax"`
 	OutdirMin *CWLExpression `yaml:"outdirMin"`
 	OutdirMax *CWLExpression `yaml:"outdirMax"`
 }
@@ -229,7 +229,7 @@ const (
 
 type CommandlineOutputBindingGlob struct {
 	Kind       OutputBindingGlobKind
-	String     *String
+	String     *string
 	Strings    Strings
 	Expression CWLExpression
 }

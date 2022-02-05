@@ -1,0 +1,4 @@
+echo-tool:
+  volume:
+    mountPath: /mnt/pvol
+    envVar: DATA_DIR

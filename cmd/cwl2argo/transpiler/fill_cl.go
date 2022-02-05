@@ -7,14 +7,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func keyNotPresentError(key string) error {
-	return fmt.Errorf("Could not find %s", key)
-}
-
 // intermediate representation used to
 // parse into interfaces. The class string is used
 // to decode Node into a structure.
-type IntermediateRepr struct {
+type intermediateRepr struct {
 	Class *string
 	Node  *yaml.Node
 }
@@ -191,7 +187,7 @@ func (out *Outputs) UnmarshalYAML(value *yaml.Node) error {
 	return nil
 }
 
-func (ir *IntermediateRepr) UnmarshalYAML(value *yaml.Node) error {
+func (ir *intermediateRepr) UnmarshalYAML(value *yaml.Node) error {
 	m := make(map[string]interface{})
 	err := value.Decode(&m)
 	if err != nil {
@@ -210,10 +206,10 @@ func (ir *IntermediateRepr) UnmarshalYAML(value *yaml.Node) error {
 }
 
 func (reqs *Requirements) UnmarshalYAML(value *yaml.Node) error {
-	rs := make(map[string]IntermediateRepr, 0)
+	rs := make(map[string]intermediateRepr, 0)
 	err := value.Decode(&rs)
 	if err != nil {
-		rsArray := make([]IntermediateRepr, 0)
+		rsArray := make([]intermediateRepr, 0)
 		err = value.Decode(&rsArray)
 		if err != nil {
 			return errors.New("[]requirement or map[class]requirement was expected")
@@ -236,6 +232,13 @@ func (reqs *Requirements) UnmarshalYAML(value *yaml.Node) error {
 				return err
 			}
 			newRequests = append(newRequests, d)
+		case "ResourceRequirement":
+			var r ResourceRequirement
+			err := req.Node.Decode(&r)
+			if err != nil {
+				return err
+			}
+			newRequests = append(newRequests, r)
 		default:
 			return fmt.Errorf("%s is not implemented", class)
 		}
@@ -256,24 +259,29 @@ func (expr *CWLExpression) UnmarshalYAML(value *yaml.Node) error {
 	if value.Kind != yaml.ScalarNode {
 		return errors.New("can only be string | bool | int | float")
 	}
-	var f float64
-	err := value.Decode(&f)
-	if err == nil {
-		expr.Kind = FloatKind
-		expr.Float = f
-		return nil
-	}
 
-	var i int
-	err = value.Decode(&i)
-	if err == nil {
-		expr.Kind = IntKind
-		expr.Int = i
-		return nil
+	if value.Tag == "!!int" {
+
+		var i int
+		err := value.Decode(&i)
+		if err == nil {
+			expr.Kind = IntKind
+			expr.Int = i
+			return nil
+		}
+	} else if value.Tag == "!!float" {
+
+		var f float64
+		err := value.Decode(&f)
+		if err == nil {
+			expr.Kind = FloatKind
+			expr.Float = f
+			return nil
+		}
 	}
 
 	var b bool
-	err = value.Decode(&b)
+	err := value.Decode(&b)
 	if err == nil {
 		expr.Kind = BoolKind
 		expr.Bool = b
@@ -300,6 +308,29 @@ func (cl *CommandlineTool) UnmarshalYAML(value *yaml.Node) error {
 	type rawCLITool CommandlineTool
 	if err := value.Decode((*rawCLITool)(cl)); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (clOutputBindingGlob *CommandlineOutputBindingGlob) UnmarshalYAML(value *yaml.Node) error {
+	var s string
+	err := value.Decode(&s)
+	if err == nil {
+		exprS := getCWLExpressionInner(s)
+		if exprS != nil {
+			clOutputBindingGlob.Kind = GlobExpressionKind
+			clOutputBindingGlob.Expression = CWLExpression{Kind: ExpressionKind, Expression: *exprS}
+			return nil
+		}
+		clOutputBindingGlob.Kind = GlobStringKind
+		clOutputBindingGlob.String = &s
+		return nil
+	}
+
+	ss := make([]string, 0)
+	err = value.Decode(&ss)
+	if err == nil {
+		return nil
 	}
 	return nil
 }

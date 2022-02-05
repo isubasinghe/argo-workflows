@@ -3,16 +3,21 @@ package transpiler
 import (
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 
 	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	log "github.com/sirupsen/logrus"
 	apiv1 "k8s.io/api/core/v1"
+
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 const (
-	ArgoType    = "Workflow"
-	ArgoVersion = "argoproj.io/v1alpha1"
+	ArgoType             = "Workflow"
+	ArgoVersion          = "argoproj.io/v1alpha1"
+	volumeClaimName      = "argovolume"
+	volumeClaimMountPath = "/mnt/pvol"
 )
 
 // de-sum typed "CommandlineInputParameter
@@ -44,7 +49,7 @@ type flatCommandlineOutputParameter struct {
 	Doc              Strings
 	Id               *string
 	Format           *CWLFormat
-	OutputBinding    *CommandlineBinding
+	OutputBinding    *CommandlineOutputBinding
 }
 
 type ParamTranslater interface {
@@ -60,16 +65,22 @@ func emitDockerRequirement(container *apiv1.Container, d *DockerRequirement) err
 
 	tmpContainer.Image = *d.DockerPull
 
+	if d.DockerOutputDirectory != nil {
+		tmpContainer.WorkingDir = *d.DockerOutputDirectory
+		log.Warn("I am assuming the DockerOutputDirectory and WorkingDir are equivalent")
+		log.Infof("Changing docker WorkingDir to %s", tmpContainer.WorkingDir)
+	}
+
 	if d.DockerFile != nil {
-		return errors.New("")
+		return errors.New("dockerfile is not currently supported")
 	}
 
 	if d.DockerImageId != nil {
-		return errors.New("")
+		return errors.New("dockerimageid is not currently supported")
 	}
 
 	if d.DockerImport != nil {
-		return errors.New("")
+		return errors.New("docker import is not currently supported")
 	}
 
 	*container = *tmpContainer
@@ -86,6 +97,7 @@ func dockerNotPresent() error              { return errors.New("DockerRequiremen
 func resourceRequirementNotPresent() error { return errors.New("ResourceRequirement was not found") }
 
 func findDockerRequirement(requirements Requirements) (*DockerRequirement, error) {
+	log.Info("Need DockerRequirement")
 	var docker *DockerRequirement
 	docker = nil
 	for _, req := range requirements {
@@ -189,6 +201,34 @@ func (inputParameter CommandlineInputParameter) getInputBindings(inputs map[stri
 	default:
 		return nil, fmt.Errorf("%T unknown type", input.Kind)
 	}
+	return &binding, nil
+}
+
+func (outputParameter CommandlineOutputParameter) getOutputBindings() (*flatCommandlineOutputParameter, error) {
+	binding := flatCommandlineOutputParameter{
+		SecondaryFiles: outputParameter.SecondaryFiles,
+		Streamable:     outputParameter.Streamable,
+		Doc:            outputParameter.Doc,
+		Id:             outputParameter.Id,
+		Format:         outputParameter.Format,
+		OutputBinding:  outputParameter.OutputBinding,
+	}
+
+	if len(outputParameter.Type) != 1 {
+		return nil, fmt.Errorf("only single output types expected: expected len(Type)==1 got len(Type)==%d in array %v", len(outputParameter.Type), outputParameter.Type)
+	}
+	ty := outputParameter.Type[0].Kind
+	switch ty {
+	case CWLStringKind:
+		break
+	case CWLIntKind:
+		break
+	case CWLFileKind:
+		break
+	default:
+		return nil, fmt.Errorf("%T unknown type", ty)
+	}
+	binding.Type = ty
 	return &binding, nil
 }
 
@@ -300,7 +340,7 @@ func emitArguments(spec *v1alpha1.WorkflowSpec, bindings []flatCommandlineInputP
 	return nil
 }
 
-func flatten(inputs Inputs, input map[string]CWLInputEntry) ([]flatCommandlineInputParameter, error) {
+func flattenInput(inputs Inputs, input map[string]CWLInputEntry) ([]flatCommandlineInputParameter, error) {
 	flatInputs := make([]flatCommandlineInputParameter, 0)
 	for _, inputBinding := range inputs {
 		newBindings, err := inputBinding.getInputBindings(input)
@@ -310,6 +350,18 @@ func flatten(inputs Inputs, input map[string]CWLInputEntry) ([]flatCommandlineIn
 		flatInputs = append(flatInputs, *newBindings)
 	}
 	return flatInputs, nil
+}
+
+func flattenOutput(outputs Outputs) ([]flatCommandlineOutputParameter, error) {
+	flatOutputs := make([]flatCommandlineOutputParameter, 0)
+	for _, outputBinding := range outputs {
+		newBindings, err := outputBinding.getOutputBindings()
+		if err != nil {
+			return nil, err
+		}
+		flatOutputs = append(flatOutputs, *newBindings)
+	}
+	return flatOutputs, nil
 }
 
 func filterParams(inputs []flatCommandlineInputParameter) []flatCommandlineInputParameter {
@@ -331,7 +383,7 @@ func filterParams(inputs []flatCommandlineInputParameter) []flatCommandlineInput
 	return newInputs
 }
 
-func needPVC(outputs []flatCommandlineInputParameter) bool {
+func needPVC(outputs []flatCommandlineOutputParameter) bool {
 	for _, binding := range outputs {
 		if binding.Type == CWLFileKind {
 			return true
@@ -340,8 +392,47 @@ func needPVC(outputs []flatCommandlineInputParameter) bool {
 	return false
 }
 
-func emitPVC() {
+func expressionToQuantity(expr *CWLExpression) (*resource.Quantity, error) {
+	var qstr string
 
+	switch expr.Kind {
+	case RawKind:
+		qstr = expr.Raw
+	case IntKind:
+		qstr = fmt.Sprintf("%dMi", expr.Int)
+	case FloatKind:
+		round := int(math.Ceil(expr.Float))
+		qstr = fmt.Sprintf("%dMi", round)
+	default:
+		return nil, fmt.Errorf("%T is not a supported type for quantity conversion", expr.Kind)
+	}
+
+	quantity, err := resource.ParseQuantity(qstr)
+	if err != nil {
+		return nil, err
+	}
+	return &quantity, nil
+}
+
+func emitPVC(spec *v1alpha1.WorkflowSpec, resourceReq *ResourceRequirement) error {
+	pSpec := apiv1.PersistentVolumeClaimSpec{}
+	resources := apiv1.ResourceRequirements{}
+	resourceMap := make(map[apiv1.ResourceName]resource.Quantity)
+	quantity, err := expressionToQuantity(resourceReq.OutdirMin)
+	if err != nil {
+		return err
+	}
+	resourceMap[apiv1.ResourceStorage] = *quantity
+	resources.Requests = resourceMap
+	pSpec.Resources = resources
+	pSpec.AccessModes = []apiv1.PersistentVolumeAccessMode{apiv1.ReadWriteMany}
+	pVolClaim := apiv1.PersistentVolumeClaim{}
+	pVolClaim.Spec = pSpec
+
+	pVolClaim.Name = volumeClaimName
+
+	spec.VolumeClaimTemplates = []apiv1.PersistentVolumeClaim{pVolClaim}
+	return nil
 }
 
 func emitInputArtifacts(template *v1alpha1.Template, inputs map[string]CWLInputEntry, locations FileLocations) error {
@@ -367,8 +458,40 @@ func emitInputArtifacts(template *v1alpha1.Template, inputs map[string]CWLInputE
 	return nil
 }
 
-func emitOutputArtifact() error {
+func emitOutputArtifact(output flatCommandlineOutputParameter, locations FileLocations) error {
+	if output.Type != CWLFileKind {
+		return errors.New("emitOutputArtifact only accepts CWLFileKind")
+	}
+
 	return nil
+}
+
+func emitOutputs(outputs []flatCommandlineOutputParameter, locations FileLocations) error {
+	for _, output := range outputs {
+		switch output.Type {
+		case CWLFileKind:
+			err := emitOutputArtifact(output, locations)
+			if err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("%T is not supported", output.Type)
+		}
+	}
+	return nil
+}
+
+func attachVolume(container *apiv1.Container, volumeName string, mountpath string) {
+
+	if container.WorkingDir != "" {
+		mountpath = container.WorkingDir
+	}
+
+	mnt := apiv1.VolumeMount{}
+	mnt.Name = volumeName
+
+	mnt.MountPath = mountpath
+	container.VolumeMounts = []apiv1.VolumeMount{mnt}
 }
 
 func EmitCommandlineTool(clTool *CommandlineTool, inputs map[string]CWLInputEntry, locations FileLocations) (*v1alpha1.Workflow, error) {
@@ -396,7 +519,7 @@ func EmitCommandlineTool(clTool *CommandlineTool, inputs map[string]CWLInputEntr
 	template.Container = &container
 	template.Name = *clTool.Id
 
-	bindings, err := flatten(clTool.Inputs, inputs)
+	bindings, err := flattenInput(clTool.Inputs, inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -406,6 +529,24 @@ func EmitCommandlineTool(clTool *CommandlineTool, inputs map[string]CWLInputEntr
 	err = emitInputParams(&template, paramBindings)
 	if err != nil {
 		return nil, err
+	}
+
+	outputBindings, err := flattenOutput(clTool.Outputs)
+	if err != nil {
+		return nil, err
+	}
+
+	if needPVC(outputBindings) {
+		log.Info("Need PersistentVolumeClaim")
+		resourceRequirement, err := findResourceRequirement(clTool.Requirements)
+		if err != nil {
+			return nil, err
+		}
+		err = emitPVC(&spec, resourceRequirement)
+		if err != nil {
+			return nil, err
+		}
+		attachVolume(&container, volumeClaimName, volumeClaimMountPath)
 	}
 
 	err = emitArgumentParams(&container, clTool.BaseCommand, clTool.Arguments, bindings)
@@ -423,7 +564,7 @@ func EmitCommandlineTool(clTool *CommandlineTool, inputs map[string]CWLInputEntr
 		return nil, err
 	}
 
-	err = emitOutputArtifact()
+	err = emitOutputs(outputBindings, locations)
 	if err != nil {
 		return nil, err
 	}

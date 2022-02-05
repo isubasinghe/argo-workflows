@@ -2,28 +2,45 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
     creationTimestamp: null
-    name: asd
+    name: echo-tool
 spec:
     arguments: {}
-    entrypoint: template-name
+    entrypoint: echo-tool
     templates:
         - container:
             args:
-                - whale.txt
+                - hello.tar
             command:
-                - cat
+                - tar
+                - --extract
+                - -f
             image: ubuntu:20.04
             name: ""
             resources: {}
+            volumeMounts:
+                - mountPath: /mnt/pvol
+                  name: argovolume
+            workingDir: /mnt/pvol
           inputs:
             artifacts:
                 - http:
-                    url: https://isub.dev/ischeme-wasm.js
-                  name: ischeme-wasm.js
-                  path: whale.txt
+                    url: https://data-isubasinghe.vercel.app/hello.tar
+                  name: tarfile
+                  path: hello.tar
           metadata: {}
-          name: template-name
+          name: echo-tool
           outputs: {}
+    volumeClaimTemplates:
+        - metadata:
+            creationTimestamp: null
+            name: argovolume
+          spec:
+            accessModes:
+                - ReadWriteMany
+            resources:
+                requests:
+                    storage: 1Gi
+          status: {}
 status:
     finishedAt: null
     startedAt: null
