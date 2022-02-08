@@ -50,10 +50,10 @@ func TypeCheckCommandlineInputs(clins []CommandlineInputParameter) error {
 				return errors.New("File|[]File expected when secondaryFiles is set")
 			}
 		}
-		if clin.Streamable != nil && allFiles != true {
+		if clin.Streamable != nil && !allFiles {
 			return errors.New("streamable only valid when types are of File|[]File")
 		}
-		if clin.Format != nil && allFiles != true {
+		if clin.Format != nil && !allFiles {
 			return errors.New("Format only valid when types are of File|[]File")
 		}
 		if clin.LoadContents != nil {
@@ -76,10 +76,10 @@ func TypeCheckCommandlineOutputs(clouts []CommandlineOutputParameter) error {
 				return errors.New("File|[]File expected when secondaryFiles is set")
 			}
 		}
-		if clout.Streamable != nil && allFiles != true {
+		if clout.Streamable != nil && !allFiles {
 			return errors.New("streamable only valid when types are of File|[]File")
 		}
-		if clout.Format != nil && allFiles != true {
+		if clout.Format != nil && !allFiles {
 			return errors.New("Format only valid when types are of File|[]File")
 		}
 	}
@@ -122,7 +122,7 @@ func TypeCheckCommandlineRequirements(id *string, clrs []CWLRequirements) error 
 	foundDocker := false
 
 	for _, requirement := range clrs {
-		if docker, ok := requirement.(DockerRequirement); ok == true {
+		if docker, ok := requirement.(DockerRequirement); ok {
 			if err := typeCheckDockerRequirement(&docker); err != nil {
 				return err
 			}
@@ -130,7 +130,7 @@ func TypeCheckCommandlineRequirements(id *string, clrs []CWLRequirements) error 
 		}
 	}
 
-	if foundDocker == false {
+	if !foundDocker {
 		return errorDockerRequirement(id)
 	}
 	return nil

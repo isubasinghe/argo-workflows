@@ -7,6 +7,7 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/tidwall/pretty"
 	"gopkg.in/yaml.v3"
 )
 
@@ -29,6 +30,9 @@ func TranspileCommandlineTool(cl CommandlineTool, inputs map[string]CWLInputEntr
 	if err != nil {
 		return err
 	}
+
+	data = pretty.Pretty(data)
+	fmt.Println(string(data))
 
 	m := make(map[string]interface{})
 	err = json.Unmarshal(data, &m)

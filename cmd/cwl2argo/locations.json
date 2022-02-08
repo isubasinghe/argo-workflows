@@ -8,10 +8,13 @@
       }
     }
   }, 
-  "outptus": {
-    "textfile": {
-      "name": "textfile", 
+  "outputs": {
+    "extracted_file": {
+      "name": "efile", 
+      "type": "s3",
       "s3": {
+        "bucket": "buckitone",
+        "key": "here"
       }
     }
   }

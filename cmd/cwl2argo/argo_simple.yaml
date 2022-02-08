@@ -9,7 +9,7 @@ spec:
     templates:
         - container:
             args:
-                - hello.tar
+                - /mnt/pvol/hello.tar
             command:
                 - tar
                 - --extract
@@ -26,10 +26,16 @@ spec:
                 - http:
                     url: https://data-isubasinghe.vercel.app/hello.tar
                   name: tarfile
-                  path: hello.tar
+                  path: /mnt/pvol/hello.tar
           metadata: {}
           name: echo-tool
-          outputs: {}
+          outputs:
+            artifacts:
+                - name: extracted_file
+                  path: /mnt/pvol/hello.txt
+                  s3:
+                    bucket: buckitone
+                    key: here
     volumeClaimTemplates:
         - metadata:
             creationTimestamp: null

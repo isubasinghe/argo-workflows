@@ -31,11 +31,11 @@ type LoadListingRequirement struct {
 	LoadListing *LoadListingEnum `yaml:"loadListing"`
 }
 
-type Dirent struct {
+/* type Dirent struct {
 	entry     CWLExpression  `yaml:"entry"`
 	entryName *CWLExpression `yaml:"entryName"`
 	writeable *bool          `yaml:"writeable"`
-}
+} */
 
 type InitialWorkDirRequirementListing interface {
 	isInitialWorkDirRequirementListing()
@@ -159,12 +159,13 @@ type CommandlineInputEnumSchema struct {
 }
 
 type CommandlineInputRecordSchema struct {
-	Type         string                         `yaml:"type"` // MUST BE "record"
-	Fields       *[]CommandlineInputRecordField `yaml:"fields"`
-	Label        *string                        `yaml:"label"`
-	Doc          *Strings                       `yaml:"doc"`
-	Name         *string                        `yaml:"name"`
-	inputBinding *CommandlineBinding            `yaml:"inputBinding"`
+	Type   string                         `yaml:"type"` // MUST BE "record"
+	Fields *[]CommandlineInputRecordField `yaml:"fields"`
+	Label  *string                        `yaml:"label"`
+	Doc    *Strings                       `yaml:"doc"`
+	Name   *string                        `yaml:"name"`
+	// will be used for processing later on hence we disable the linter
+	inputBinding *CommandlineBinding `yaml:"inputBinding"` //nolint:unused,structcheck
 }
 
 type Type int32
@@ -191,6 +192,7 @@ type CommandlineType struct {
 	Record *CommandlineInputRecordSchema
 	Enum   *CommandlineInputEnumSchema
 	Array  *CommandlineInputArraySchema
+	File   *CWLFile
 }
 
 type CommandlineTypes []CommandlineType
@@ -230,7 +232,7 @@ const (
 type CommandlineOutputBindingGlob struct {
 	Kind       OutputBindingGlobKind
 	String     *string
-	Strings    Strings
+	Strings    []string
 	Expression CWLExpression
 }
 

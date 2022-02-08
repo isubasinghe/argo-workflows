@@ -45,11 +45,16 @@ func (f *FileLocationData) UnmarshalJSON(data []byte) error {
 		if tmp.HTTP == nil {
 			return errors.New("http data not provided")
 		}
+	case S3Kind:
+		if tmp.S3 == nil {
+			return errors.New("s3 data not provided")
+		}
 	default:
 		return fmt.Errorf("%s is not a valid type", tmp.Type)
 	}
 	f.Name = tmp.Name
 	f.Type = tmp.Type
 	f.HTTP = tmp.HTTP
+	f.S3 = tmp.S3
 	return nil
 }

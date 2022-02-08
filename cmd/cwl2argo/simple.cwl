@@ -24,4 +24,4 @@ outputs:
   extracted_file:
     type: File 
     outputBinding:
-      glob: hello.txt
+      glob: /mnt/pvol/hello.txt

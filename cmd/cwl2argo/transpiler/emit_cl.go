@@ -9,7 +9,6 @@ import (
 	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	log "github.com/sirupsen/logrus"
 	apiv1 "k8s.io/api/core/v1"
-
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -44,16 +43,13 @@ type flatCommandlineOutputParameter struct {
 	Type             Type
 	Label            *string
 	FileLocationData *FileLocationData
+	File             *CWLFile
 	SecondaryFiles   SecondaryFiles
 	Streamable       *bool
 	Doc              Strings
 	Id               *string
 	Format           *CWLFormat
 	OutputBinding    *CommandlineOutputBinding
-}
-
-type ParamTranslater interface {
-	TranslateToParam(*CommandlineBinding) ([]v1alpha1.Parameter, error)
 }
 
 func emitDockerRequirement(container *apiv1.Container, d *DockerRequirement) error {
@@ -87,10 +83,10 @@ func emitDockerRequirement(container *apiv1.Container, d *DockerRequirement) err
 	return nil
 }
 
-func emitInputParam(input flatCommandlineInputParameter) (*v1alpha1.Parameter, error) {
+func emitInputParam(input flatCommandlineInputParameter) *v1alpha1.Parameter {
 	name := *input.Id
 	param := v1alpha1.Parameter{Name: name}
-	return &param, nil
+	return &param
 }
 
 func dockerNotPresent() error              { return errors.New("DockerRequirement was not found") }
@@ -132,17 +128,13 @@ func findResourceRequirement(requirements Requirements) (*ResourceRequirement, e
 	}
 }
 
-func emitInputParams(template *v1alpha1.Template, inputs []flatCommandlineInputParameter) error {
+func emitInputParams(template *v1alpha1.Template, inputs []flatCommandlineInputParameter) {
 	params := make([]v1alpha1.Parameter, 0)
 	for _, input := range inputs {
-		newInput, err := emitInputParam(input)
-		if err != nil {
-			return err
-		}
+		newInput := emitInputParam(input)
 		params = append(params, *newInput)
 	}
 	template.Inputs.Parameters = params
-	return nil
 }
 
 // dummy function to evaluate CommandlineTool
@@ -162,7 +154,7 @@ func canFindType(input CWLInputEntry, tys CommandlineTypes) error {
 			return nil
 		}
 	}
-	return nil
+	return errors.New("unable to find type")
 }
 
 func (inputParameter CommandlineInputParameter) getInputBindings(inputs map[string]CWLInputEntry) (*flatCommandlineInputParameter, error) {
@@ -451,6 +443,7 @@ func emitInputArtifacts(template *v1alpha1.Template, inputs map[string]CWLInputE
 		art.Name = location.Name
 		art.Path = *inputEntry.FileData.Path
 		art.HTTP = location.HTTP
+		art.S3 = location.S3
 		arts = append(arts, art)
 	}
 
@@ -458,19 +451,43 @@ func emitInputArtifacts(template *v1alpha1.Template, inputs map[string]CWLInputE
 	return nil
 }
 
-func emitOutputArtifact(output flatCommandlineOutputParameter, locations FileLocations) error {
+func evalCommandlineBindingOutputGlob(bglob *CommandlineOutputBindingGlob) (string, error) {
+	if bglob == nil {
+		return "", errors.New("output binding invalid")
+	}
+	switch bglob.Kind {
+	case GlobStringKind:
+		return *bglob.String, nil
+	default:
+		return "", errors.New("only string is supported at the moment")
+	}
+}
+
+func emitOutputArtifact(tmpl *v1alpha1.Template, output flatCommandlineOutputParameter, locations FileLocations) error {
 	if output.Type != CWLFileKind {
 		return errors.New("emitOutputArtifact only accepts CWLFileKind")
 	}
+	path, err := evalCommandlineBindingOutputGlob(&output.OutputBinding.Glob)
+	if err != nil {
+		return err
+	}
+	location, ok := locations.Outputs[*output.Id]
+	if !ok {
+		return fmt.Errorf("unable to find output for %s", *output.Id)
+	}
+	art := v1alpha1.Artifact{Name: *output.Id, Path: path}
+	art.HTTP = location.HTTP
+	art.S3 = location.S3
 
+	tmpl.Outputs.Artifacts = append(tmpl.Outputs.Artifacts, art)
 	return nil
 }
 
-func emitOutputs(outputs []flatCommandlineOutputParameter, locations FileLocations) error {
+func emitOutputs(tmpl *v1alpha1.Template, outputs []flatCommandlineOutputParameter, locations FileLocations) error {
 	for _, output := range outputs {
 		switch output.Type {
 		case CWLFileKind:
-			err := emitOutputArtifact(output, locations)
+			err := emitOutputArtifact(tmpl, output, locations)
 			if err != nil {
 				return err
 			}
@@ -482,7 +499,6 @@ func emitOutputs(outputs []flatCommandlineOutputParameter, locations FileLocatio
 }
 
 func attachVolume(container *apiv1.Container, volumeName string, mountpath string) {
-
 	if container.WorkingDir != "" {
 		mountpath = container.WorkingDir
 	}
@@ -526,10 +542,7 @@ func EmitCommandlineTool(clTool *CommandlineTool, inputs map[string]CWLInputEntr
 
 	paramBindings := filterParams(bindings)
 
-	err = emitInputParams(&template, paramBindings)
-	if err != nil {
-		return nil, err
-	}
+	emitInputParams(&template, paramBindings)
 
 	outputBindings, err := flattenOutput(clTool.Outputs)
 	if err != nil {
@@ -564,7 +577,7 @@ func EmitCommandlineTool(clTool *CommandlineTool, inputs map[string]CWLInputEntr
 		return nil, err
 	}
 
-	err = emitOutputs(outputBindings, locations)
+	err = emitOutputs(&template, outputBindings, locations)
 	if err != nil {
 		return nil, err
 	}

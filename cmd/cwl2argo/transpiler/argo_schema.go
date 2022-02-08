@@ -2,6 +2,8 @@ package transpiler
 
 import (
 	_ "embed"
+	"errors"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/xeipuuv/gojsonschema"
@@ -17,20 +19,37 @@ var schema string
 func VerifyArgoSchema(argo string) error {
 	schemaLoader := gojsonschema.NewReferenceLoader(schemaLocation)
 
+	var localSchema *gojsonschema.Schema
+	var err error
+
 	// local here means local variable, this is obviously fetched remotely
-	localSchema, err := gojsonschema.NewSchema(schemaLoader)
-	if err != nil {
-		log.Warnf("Could not load %s, attempting to load embedded schema file", schemaLocation)
-	}
-
-	schemaLoader = gojsonschema.NewStringLoader(schema)
-
 	localSchema, err = gojsonschema.NewSchema(schemaLoader)
 	if err != nil {
-		log.Errorf("Could not load from %s and from the embeded file, something is probably wrong with your schema", schemaLoader)
-		return err
+		log.Warnf("Could not load %s, attempting to load embedded schema file", schemaLocation)
+
+		schemaLoader = gojsonschema.NewStringLoader(schema)
+
+		localSchema, err = gojsonschema.NewSchema(schemaLoader)
+		if err != nil {
+			log.Errorf("Could not load from %s and from the embedded file, something is probably wrong with your schema", schemaLoader)
+			return err
+		}
+		log.Info("Successfully loaded schema from embedded file")
 	}
-	log.Info("Successfully loaded schema from embedded file")
-	_ = localSchema
+
+	loader := gojsonschema.NewStringLoader(argo)
+
+	result, err := localSchema.Validate(loader)
+	if err != nil {
+		panic(err.Error())
+	}
+	if !result.Valid() {
+		errorStr := ""
+		for _, desc := range result.Errors() {
+			errorStr = fmt.Sprintf("%s%s\n", errorStr, desc)
+		}
+		return errors.New(errorStr)
+	}
+
 	return nil
 }
