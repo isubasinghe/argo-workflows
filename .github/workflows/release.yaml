@@ -28,7 +28,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.11
         id: cache
         with:
           path: /tmp/.buildx-cache
@@ -99,7 +99,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.11
         id: cache
         with:
           path: /tmp/.buildx-cache
@@ -323,18 +323,18 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: "16"
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3.0.11
         with:
           path: ui/node_modules
           key: ${{ runner.os }}-node-dep-v1-${{ hashFiles('**/yarn.lock') }}
       - uses: actions/setup-go@v2
         with:
           go-version: "1.17"
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3.0.11
         with:
           path: /home/runner/.cache/go-build
           key: GOCACHE-v2-${{ hashFiles('**/go.mod') }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3.0.11
         with:
           path: /home/runner/go/pkg/mod
           key: GOMODCACHE-v2-${{ hashFiles('**/go.mod') }}
