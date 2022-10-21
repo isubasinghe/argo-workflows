@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: deadlock-test-
+spec:
+  entrypoint: main-steps
+
+  templates:
+    - name: main-steps
+      synchronization:
+        mutex:
+          name: "mutex-{{workflow.name}}"
+      steps:
+        - - name: main
+            template: main-container
+
+    - name: main-container
+      container:
+        image: "busybox:latest"
+        command: ["sh"]
+        args: ["-c", "sleep 10; exit 0"]

@@ -87,6 +87,8 @@ func (cm *Manager) Initialize(wfs []wfv1.Workflow) {
 
 				for _, holders := range holding.Holders {
 					resourceKey := getResourceKey(wf.Namespace, wf.Name, holders)
+					log.Debugln("INIT LOCK ACQUIRE FOR", resourceKey)
+					log.Debugln(semaphore)
 					if semaphore != nil && semaphore.acquire(resourceKey) {
 						log.Infof("Lock acquired by %s from %s", resourceKey, holding.Semaphore)
 					}
@@ -102,6 +104,7 @@ func (cm *Manager) Initialize(wfs []wfv1.Workflow) {
 					mutex := cm.initializeMutex(holding.Mutex)
 					if holding.Holder != "" {
 						resourceKey := getResourceKey(wf.Namespace, wf.Name, holding.Holder)
+						log.Debugln("INIT LOCK ACQUIRE MUTEX FOR ", resourceKey)
 						mutex.acquire(resourceKey)
 					}
 					cm.syncLockMap[holding.Mutex] = mutex
@@ -293,6 +296,7 @@ func getHolderKey(wf *wfv1.Workflow, nodeName string) string {
 	if nodeName != "" {
 		key = fmt.Sprintf("%s/%s", key, nodeName)
 	}
+	log.Debugln("HERE HERE KEY: ", key)
 	return key
 }
 
@@ -301,6 +305,7 @@ func getResourceKey(namespace, wfName, resourceName string) string {
 	if resourceName != wfName {
 		resourceKey = fmt.Sprintf("%s/%s", resourceKey, resourceName)
 	}
+	log.Debugln("HERE HERE KEY: ", resourceKey)
 	return resourceKey
 }
 

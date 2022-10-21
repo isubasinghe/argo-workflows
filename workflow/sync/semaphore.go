@@ -131,6 +131,7 @@ func workflowKey(i *item) string {
 
 // addToQueue adds the holderkey into priority queue that maintains the priority order to acquire the lock.
 func (s *PrioritySemaphore) addToQueue(holderKey string, priority int32, creationTime time.Time) {
+	s.log.Debugln("Added to Queue by ", holderKey)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -153,9 +154,11 @@ func (s *PrioritySemaphore) removeFromQueue(holderKey string) {
 
 func (s *PrioritySemaphore) acquire(holderKey string) bool {
 	if s.semaphore.TryAcquire(1) {
+		log.Debugln("Acquired for ", holderKey)
 		s.lockHolder[holderKey] = true
 		return true
 	}
+	log.Debugln("Could not acquire for", holderKey)
 	return false
 }
 
@@ -173,6 +176,10 @@ func isSameWorkflowNodeKeys(firstKey, secondKey string) bool {
 func (s *PrioritySemaphore) tryAcquire(holderKey string) (bool, string) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+
+	fmt.Printf("HERE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n\n\n\n\n\n\n\n\n\n\n")
+	fmt.Println(holderKey)
+	fmt.Println(s.lockHolder)
 
 	if _, ok := s.lockHolder[holderKey]; ok {
 		s.log.Debugf("%s is already holding a lock", holderKey)
