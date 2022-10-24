@@ -130,6 +130,8 @@ func (cm *Manager) TryAcquire(wf *wfv1.Workflow, nodeName string, syncLockRef *w
 		return false, false, "", fmt.Errorf("requested configuration is invalid: %w", err)
 	}
 
+	log.Debug("HERE2 LockName is :", syncLockName)
+
 	lockKey := syncLockName.EncodeName()
 	lock, found := cm.syncLockMap[lockKey]
 	if !found {
@@ -296,7 +298,7 @@ func getHolderKey(wf *wfv1.Workflow, nodeName string) string {
 	if nodeName != "" {
 		key = fmt.Sprintf("%s/%s", key, nodeName)
 	}
-	log.Debugln("HERE HERE KEY: ", key)
+	log.Debugln("HERE HERE HOLDER_KEY: ", key)
 	return key
 }
 
@@ -305,7 +307,7 @@ func getResourceKey(namespace, wfName, resourceName string) string {
 	if resourceName != wfName {
 		resourceKey = fmt.Sprintf("%s/%s", resourceKey, resourceName)
 	}
-	log.Debugln("HERE HERE KEY: ", resourceKey)
+	log.Debugln("HERE HERE RESOURCE_KEY: ", resourceKey)
 	return resourceKey
 }
 
