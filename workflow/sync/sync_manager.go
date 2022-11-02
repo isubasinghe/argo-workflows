@@ -74,6 +74,7 @@ func (cm *Manager) Initialize(wfs []wfv1.Workflow) {
 
 		if wf.Status.Synchronization.Semaphore != nil {
 			for _, holding := range wf.Status.Synchronization.Semaphore.Holding {
+				fmt.Printf("ITERATING OVER HOLDING OF VALUE %s\n", holding.Semaphore)
 
 				semaphore := cm.syncLockMap[holding.Semaphore]
 				if semaphore == nil {

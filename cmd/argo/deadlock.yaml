@@ -18,4 +18,4 @@ spec:
       container:
         image: "busybox:latest"
         command: ["sh"]
-        args: ["-c", "sleep 10; exit 0"]
+        args: ["-c", "sleep 30; exit 0"]
