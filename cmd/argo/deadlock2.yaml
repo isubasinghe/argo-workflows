@@ -4,12 +4,13 @@ metadata:
   generateName: deadlock-test-
 spec:
   entrypoint: main-steps
+  # mutex moved up here
+  synchronization:
+    mutex:
+      name: "mutex-{{workflow.name}}"
 
   templates:
     - name: main-steps
-      synchronization:
-        mutex:
-          name: "mutex-{{workflow.name}}"
       steps:
         - - name: main
             template: main-container

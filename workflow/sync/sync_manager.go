@@ -99,11 +99,12 @@ func (cm *Manager) Initialize(wfs []wfv1.Workflow) {
 
 		if wf.Status.Synchronization.Mutex != nil {
 			for _, holding := range wf.Status.Synchronization.Mutex.Holding {
-
+				fmt.Printf("ITERATING2 OVER HOLDING OF VALUE %s", holding.Mutex)
 				mutex := cm.syncLockMap[holding.Mutex]
 				if mutex == nil {
 					mutex := cm.initializeMutex(holding.Mutex)
 					if holding.Holder != "" {
+						log.Debugln("Holder is ", holding.Holder)
 						resourceKey := getResourceKey(wf.Namespace, wf.Name, holding.Holder)
 						log.Debugln("INIT LOCK ACQUIRE MUTEX FOR ", resourceKey)
 						mutex.acquire(resourceKey)

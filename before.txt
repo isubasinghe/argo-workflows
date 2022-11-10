@@ -1,0 +1,356 @@
+GIT_COMMIT=0db504aa1e78f7dea22196b1098bfda4f4caa25c GIT_BRANCH=fix-deadlock-sync-manager GIT_TAG=untagged GIT_TREE_STATE=dirty RELEASE_TAG=false DEV_BRANCH=true VERSION=latest
+KUBECTX=k3d-k3s-default DOCKER_DESKTOP=false K3D=true DOCKER_PUSH=false
+RUN_MODE=local PROFILE=minimal AUTH_MODE=hybrid SECURE=false STATIC_FILES=false ALWAYS_OFFLOAD_NODE_STATUS=false UPPERIO_DB_DEBUG=0 LOG_LEVEL=debug NAMESPACED=true
+kubectl get ns argo || kubectl create ns argo
+NAME   STATUS   AGE
+argo   Active   7d1h
+kubectl config set-context --current --namespace=argo
+Context "k3d-k3s-default" modified.
+installing PROFILE=minimal
+kubectl kustomize --load-restrictor=LoadRestrictionsNone test/e2e/manifests/minimal | sed 's|quay.io/argoproj/|quay.io/argoproj/|' | sed 's/namespace: argo/namespace: argo/' | kubectl -n argo apply --prune -l app.kubernetes.io/part-of=argo -f -
+customresourcedefinition.apiextensions.k8s.io/clusterworkflowtemplates.argoproj.io unchanged
+customresourcedefinition.apiextensions.k8s.io/cronworkflows.argoproj.io unchanged
+customresourcedefinition.apiextensions.k8s.io/eventbus.argoproj.io unchanged
+customresourcedefinition.apiextensions.k8s.io/eventsources.argoproj.io unchanged
+customresourcedefinition.apiextensions.k8s.io/sensors.argoproj.io unchanged
+customresourcedefinition.apiextensions.k8s.io/workflowartifactgctasks.argoproj.io unchanged
+customresourcedefinition.apiextensions.k8s.io/workfloweventbindings.argoproj.io unchanged
+customresourcedefinition.apiextensions.k8s.io/workflows.argoproj.io unchanged
+customresourcedefinition.apiextensions.k8s.io/workflowtaskresults.argoproj.io unchanged
+customresourcedefinition.apiextensions.k8s.io/workflowtasksets.argoproj.io unchanged
+customresourcedefinition.apiextensions.k8s.io/workflowtemplates.argoproj.io unchanged
+serviceaccount/argo unchanged
+serviceaccount/argo-server unchanged
+serviceaccount/github.com unchanged
+role.rbac.authorization.k8s.io/agent unchanged
+role.rbac.authorization.k8s.io/argo-role unchanged
+role.rbac.authorization.k8s.io/argo-server-role unchanged
+role.rbac.authorization.k8s.io/artifactgc unchanged
+role.rbac.authorization.k8s.io/executor unchanged
+role.rbac.authorization.k8s.io/pod-manager unchanged
+role.rbac.authorization.k8s.io/submit-workflow-template unchanged
+role.rbac.authorization.k8s.io/workflow-manager unchanged
+clusterrole.rbac.authorization.k8s.io/argo-clusterworkflowtemplate-role unchanged
+clusterrole.rbac.authorization.k8s.io/argo-server-clusterworkflowtemplate-role unchanged
+rolebinding.rbac.authorization.k8s.io/agent-default unchanged
+rolebinding.rbac.authorization.k8s.io/argo-binding unchanged
+rolebinding.rbac.authorization.k8s.io/argo-server-binding unchanged
+rolebinding.rbac.authorization.k8s.io/artifactgc-default unchanged
+rolebinding.rbac.authorization.k8s.io/executor-default unchanged
+rolebinding.rbac.authorization.k8s.io/github.com unchanged
+rolebinding.rbac.authorization.k8s.io/pod-manager-default unchanged
+rolebinding.rbac.authorization.k8s.io/workflow-manager-default unchanged
+clusterrolebinding.rbac.authorization.k8s.io/argo-clusterworkflowtemplate-role-binding unchanged
+clusterrolebinding.rbac.authorization.k8s.io/argo-server-clusterworkflowtemplate-role-binding unchanged
+configmap/artifact-repositories unchanged
+configmap/workflow-controller-configmap unchanged
+secret/argo-server-sso configured
+secret/argo-server.service-account-token unchanged
+secret/argo-workflows-agent-ca-certificates configured
+secret/argo-workflows-webhook-clients configured
+secret/default.service-account-token unchanged
+secret/github.com.service-account-token unchanged
+secret/my-httpbin-cred configured
+secret/my-minio-cred configured
+service/argo-server unchanged
+service/httpbin unchanged
+service/minio unchanged
+priorityclass.scheduling.k8s.io/workflow-controller unchanged
+deployment.apps/argo-server configured
+deployment.apps/httpbin unchanged
+deployment.apps/minio unchanged
+deployment.apps/workflow-controller unchanged
+CGO_ENABLED=0 go build -gcflags '' -v -ldflags '-X github.com/argoproj/argo-workflows/v3.version=latest -X github.com/argoproj/argo-workflows/v3.buildDate=2022-11-10T02:09:04Z -X github.com/argoproj/argo-workflows/v3.gitCommit=0db504aa1e78f7dea22196b1098bfda4f4caa25c -X github.com/argoproj/argo-workflows/v3.gitTreeState=dirty -X github.com/argoproj/argo-workflows/v3.gitTag=untagged -extldflags -static' -o dist/argo ./cmd/argo
+starting STATIC_FILES=false (DEV_BRANCH=true, GIT_BRANCH=fix-deadlock-sync-manager), AUTH_MODE=hybrid, RUN_MODE=local, MANAGED_NAMESPACE=argo
+⚠️  not starting UI. If you want to test the UI, run 'make start UI=true' to start it
+# Check dex, minio, postgres and mysql are in hosts file
+grep '127.0.0.1.*azurite' /etc/hosts
+127.0.0.1 azurite
+grep '127.0.0.1.*minio' /etc/hosts
+127.0.0.1 minio
+grep '127.0.0.1.*postgres' /etc/hosts
+127.0.0.1 postgres
+grep '127.0.0.1.*mysql' /etc/hosts
+127.0.0.1 mysql
+./hack/port-forward.sh
+wait-for minio
+deployment.apps/minio condition met
+port-forward minio 9000
+Forwarding from 127.0.0.1:9000 -> 9000
+Forwarding from [::1]:9000 -> 9000
+port-forward minio 9001
+Forwarding from 127.0.0.1:9001 -> 9001
+Forwarding from [::1]:9001 -> 9001
+env DEFAULT_REQUEUE_TIME=1s SECURE=false ALWAYS_OFFLOAD_NODE_STATUS=false LOG_LEVEL=debug UPPERIO_DB_DEBUG=0 IMAGE_NAMESPACE=quay.io/argoproj VERSION=latest AUTH_MODE=hybrid NAMESPACED=true NAMESPACE=argo MANAGED_NAMESPACE=argo CTRL=true LOGS=true UI=false API=true PLUGINS=true /home/isubasinghe/go/bin/goreman -set-ports=false -logtime=false start | grep ""
+[35m         ui | [mTerminating ui
+[33m       logs | [mmake[1]: Entering directory '/home/isubasinghe/go/src/github.com/argoproj/argo-workflows'
+[33m       logs | [mGIT_COMMIT=0db504aa1e78f7dea22196b1098bfda4f4caa25c GIT_BRANCH=fix-deadlock-sync-manager GIT_TAG=untagged GIT_TREE_STATE=dirty RELEASE_TAG=false DEV_BRANCH=true VERSION=latest
+[33m       logs | [mKUBECTX=k3d-k3s-default DOCKER_DESKTOP=false K3D=true DOCKER_PUSH=false
+[33m       logs | [mRUN_MODE=local PROFILE=minimal AUTH_MODE=hybrid SECURE=false STATIC_FILES=false ALWAYS_OFFLOAD_NODE_STATUS=false UPPERIO_DB_DEBUG=0 LOG_LEVEL=debug NAMESPACED=true
+[32m controller | [mtime="2022-11-10T13:09:12+11:00" level=info msg="index config" indexWorkflowSemaphoreKeys=true
+[32m controller | [mtime="2022-11-10T13:09:12+11:00" level=info msg="cron config" cronSyncPeriod=10s
+[32m controller | [mtime="2022-11-10T13:09:12+11:00" level=info msg="Memoization caches will be garbage-collected if they have not been hit after" gcAfterNotHitDuration=30s
+[32m controller | [mtime="2022-11-10T13:09:12.440Z" level=info msg="not enabling pprof debug endpoints"
+[32m controller | [mtime="2022-11-10T13:09:12.445Z" level=info msg="Get configmaps 200"
+[32m controller | [mtime="2022-11-10T13:09:12.448Z" level=info msg="Configuration:\nartifactRepository:\n  s3:\n    accessKeySecret:\n      key: accesskey\n      name: my-minio-cred\n    bucket: my-bucket\n    endpoint: minio:9000\n    insecure: true\n    secretKeySecret:\n      key: secretkey\n      name: my-minio-cred\nexecutor:\n  imagePullPolicy: IfNotPresent\n  name: \"\"\n  resources:\n    limits:\n      cpu: 500m\n      memory: 128Mi\n    requests:\n      cpu: 100m\n      memory: 64Mi\nimages:\n  docker/whalesay:latest:\n    cmd:\n    - cowsay\ninitialDelay: 0s\nlinks:\n- name: Workflow Link\n  scope: workflow\n  url: http://logging-facility?namespace=${metadata.namespace}&workflowName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Pod Link\n  scope: pod\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Pod Logs Link\n  scope: pod-logs\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Event Source Logs Link\n  scope: event-source-logs\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Sensor Logs Link\n  scope: sensor-logs\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\nmetricsConfig:\n  enabled: true\n  path: /metrics\n  port: 9090\nnamespaceParallelism: 10\nnodeEvents: {}\npodSpecLogStrategy: {}\nretentionPolicy:\n  completed: 10\n  errored: 2\n  failed: 2\nsso:\n  clientId:\n    key: \"\"\n  clientSecret:\n    key: \"\"\n  issuer: \"\"\n  redirectUrl: \"\"\n  sessionExpiry: 0s\ntelemetryConfig: {}\nworkflowDefaults:\n  metadata:\n    creationTimestamp: null\n  spec:\n    activeDeadlineSeconds: 300\n    arguments: {}\n    podSpecPatch: |\n      terminationGracePeriodSeconds: 3\n  status:\n    finishedAt: null\n    startedAt: null\n"
+[32m controller | [mtime="2022-11-10T13:09:12.448Z" level=info msg="Persistence configuration disabled"
+[32m controller | [mtime="2022-11-10T13:09:12.448Z" level=info executorImage="quay.io/argoproj/argoexec:latest" executorImagePullPolicy=IfNotPresent managedNamespace=argo
+[32m controller | [mI1110 13:09:12.448744  134733 leaderelection.go:248] attempting to acquire leader lease argo/workflow-controller...
+[36margo-server | [mtime="2022-11-10T13:09:12.449Z" level=debug msg="CLI version" version="{latest+0db504a.dirty 2022-11-10T02:09:04Z 0db504aa1e78f7dea22196b1098bfda4f4caa25c untagged dirty go1.18.7 gc linux/amd64}"
+[36margo-server | [mtime="2022-11-10T13:09:12.449Z" level=info msg="not enabling pprof debug endpoints"
+[36margo-server | [mtime="2022-11-10T13:09:12.450Z" level=info authModes="[hybrid]" baseHRef=/ managedNamespace=argo namespace=argo secure=false ssoNamespace=argo
+[36margo-server | [mtime="2022-11-10T13:09:12.450Z" level=warning msg="You are running in insecure mode. Learn how to enable transport layer security: https://argoproj.github.io/argo-workflows/tls/"
+[36margo-server | [mtime="2022-11-10T13:09:12.450Z" level=info msg="SSO disabled"
+[32m controller | [mtime="2022-11-10T13:09:12.450Z" level=info msg="Get leases 200"
+[32m controller | [mtime="2022-11-10T13:09:12.454Z" level=info msg="Update leases 200"
+[32m controller | [mI1110 13:09:12.454281  134733 leaderelection.go:258] successfully acquired lease argo/workflow-controller
+[32m controller | [mtime="2022-11-10T13:09:12.454Z" level=info msg="new leader" leader=local
+[32m controller | [mtime="2022-11-10T13:09:12.454Z" level=debug msg="Event(v1.ObjectReference{Kind:\"Lease\", Namespace:\"argo\", Name:\"workflow-controller\", UID:\"ed78e68f-b575-4803-9103-b4d5f0117d68\", APIVersion:\"coordination.k8s.io/v1\", ResourceVersion:\"79187\", FieldPath:\"\"}): type: 'Normal' reason: 'LeaderElection' local became leader"
+[32m controller | [mtime="2022-11-10T13:09:12.454Z" level=info msg="Starting Workflow Controller" defaultRequeueTime=1s version=latest+0db504a.dirty
+[32m controller | [mtime="2022-11-10T13:09:12.454Z" level=info msg="Current Worker Numbers" podCleanup=4 workflow=32 workflowTtl=4
+[32m controller | [mtime="2022-11-10T13:09:12.454Z" level=info msg="Watching task results" labelSelector="!workflows.argoproj.io/controller-instanceid,workflows.argoproj.io/workflow"
+[32m controller | [mtime="2022-11-10T13:09:12.454Z" level=info msg=Plugins executorPlugins=true
+[32m controller | [mtime="2022-11-10T13:09:12.456Z" level=info msg="Get leases 200"
+[32m controller | [mtime="2022-11-10T13:09:12.456Z" level=info msg="List workflows 200"
+[32m controller | [mtime="2022-11-10T13:09:12.457Z" level=info msg="Create events 201"
+[36margo-server | [mtime="2022-11-10T13:09:12.457Z" level=info msg="Starting Argo Server" instanceID= version=latest+0db504a.dirty
+[36margo-server | [mtime="2022-11-10T13:09:12.457Z" level=info msg="Creating event controller" asyncDispatch=false operationQueueSize=16 workerCount=4
+[32m controller | [mtime="2022-11-10T13:09:12.458Z" level=info msg="Update leases 200"
+[32m controller | [mtime="2022-11-10T13:09:12.458Z" level=info msg="Manager initialized successfully"
+[32m controller | [mtime="2022-11-10T13:09:12.458Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates verb=get
+[32m controller | [mtime="2022-11-10T13:09:12.460Z" level=info msg="Create selfsubjectaccessreviews 201"
+[32m controller | [mtime="2022-11-10T13:09:12.460Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates status="{true false  }" verb=get
+[32m controller | [mtime="2022-11-10T13:09:12.460Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates verb=list
+[32m controller | [mtime="2022-11-10T13:09:12.460Z" level=info msg="List pods 200"
+[32m controller | [mtime="2022-11-10T13:09:12.460Z" level=info msg="List workflowtaskresults 200"
+[36margo-server | [mtime="2022-11-10T13:09:12.460Z" level=info msg="GRPC Server Max Message Size, MaxGRPCMessageSize, is set" GRPC_MESSAGE_SIZE=104857600
+[36margo-server | [mtime="2022-11-10T13:09:12.460Z" level=info msg="Argo Server started successfully on http://localhost:2746" url="http://localhost:2746"
+[32m controller | [mtime="2022-11-10T13:09:12.461Z" level=info msg="Watch configmaps 200"
+[32m controller | [mtime="2022-11-10T13:09:12.461Z" level=info msg="List workflowartifactgctasks 200"
+[32m controller | [mtime="2022-11-10T13:09:12.461Z" level=info msg="List configmaps 200"
+[32m controller | [mtime="2022-11-10T13:09:12.461Z" level=info msg="List workflowtemplates 200"
+[32m controller | [mtime="2022-11-10T13:09:12.461Z" level=info msg="Create selfsubjectaccessreviews 201"
+[32m controller | [mtime="2022-11-10T13:09:12.461Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates status="{true false  }" verb=list
+[32m controller | [mtime="2022-11-10T13:09:12.461Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates verb=watch
+[32m controller | [mtime="2022-11-10T13:09:12.461Z" level=info msg="List workflowtasksets 200"
+[32m controller | [mtime="2022-11-10T13:09:12.461Z" level=debug msg="received config map argo/workflow-controller-configmap update"
+[32m controller | [mtime="2022-11-10T13:09:12.462Z" level=debug msg="received config map argo/kube-root-ca.crt update"
+[32m controller | [mtime="2022-11-10T13:09:12.462Z" level=debug msg="received config map argo/artifact-repositories update"
+[32m controller | [mtime="2022-11-10T13:09:12.462Z" level=info msg="List workflows 200"
+[32m controller | [mtime="2022-11-10T13:09:12.462Z" level=info msg="Watch workflowartifactgctasks 200"
+[32m controller | [mtime="2022-11-10T13:09:12.462Z" level=info msg="Watch workflowtemplates 200"
+[32m controller | [mtime="2022-11-10T13:09:12.462Z" level=info msg="Watch configmaps 200"
+[32m controller | [mtime="2022-11-10T13:09:12.462Z" level=info msg="Create selfsubjectaccessreviews 201"
+[32m controller | [mtime="2022-11-10T13:09:12.462Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates status="{true false  }" verb=watch
+[32m controller | [mtime="2022-11-10T13:09:12.462Z" level=info msg="Watch workflowtasksets 200"
+[32m controller | [mtime="2022-11-10T13:09:12.462Z" level=info msg="Watch pods 200"
+[32m controller | [mtime="2022-11-10T13:09:12.463Z" level=info msg="Watch workflowtaskresults 200"
+[32m controller | [mtime="2022-11-10T13:09:12.463Z" level=info msg="Watch workflows 200"
+[32m controller | [mtime="2022-11-10T13:09:12.463Z" level=info msg="List clusterworkflowtemplates 200"
+[32m controller | [mtime="2022-11-10T13:09:12.464Z" level=info msg="Watch clusterworkflowtemplates 200"
+[32m controller | [mtime="2022-11-10T13:09:12.563Z" level=info msg="Performing periodic GC" periodicity=30s
+[32m controller | [mtime="2022-11-10T13:09:12.563Z" level=debug msg="Check the workflow existence"
+[32m controller | [mtime="2022-11-10T13:09:12.563Z" level=info msg="Persistence disabled - so archived workflow GC disabled - you must restart the controller if you enable this"
+[32m controller | [mtime="2022-11-10T13:09:12.563Z" level=info msg="Starting prometheus metrics server at localhost:9090/metrics"
+[32m controller | [mtime="2022-11-10T13:09:12.563Z" level=info msg="Starting workflow garbage collector controller (retentionWorkers 4)"
+[32m controller | [mtime="2022-11-10T13:09:12.563Z" level=info msg="Started workflow garbage collection"
+[32m controller | [mW1110 13:09:12.563476  134733 shared_informer.go:401] The sharedIndexInformer has started, run more than once is not allowed
+[32m controller | [mtime="2022-11-10T13:09:12.563Z" level=info msg="Starting CronWorkflow controller"
+[32m controller | [mtime="2022-11-10T13:09:12.563Z" level=debug msg="Syncing all CronWorkflows"
+[32m controller | [mtime="2022-11-10T13:09:12.565Z" level=info msg="List workflows 200"
+[32m controller | [mtime="2022-11-10T13:09:12.565Z" level=info msg="List cronworkflows 200"
+[32m controller | [mtime="2022-11-10T13:09:12.566Z" level=info msg="Watch workflows 200"
+[32m controller | [mtime="2022-11-10T13:09:12.566Z" level=info msg="Watch cronworkflows 200"
+[32m controller | [mtime="2022-11-10T13:09:12.566Z" level=info msg="Processing workflow" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template by name"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template by name"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.567Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=info msg="Get configmaps 200"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=info msg="resolved artifact repository" artifactRepositoryRef="argo/#"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=info msg="Updated phase  -> Running" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Evaluating node deadlock-test-sn8p5: template: *v1alpha1.WorkflowStep (main-steps), boundaryID: " namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Event(v1.ObjectReference{Kind:\"Workflow\", Namespace:\"argo\", Name:\"deadlock-test-sn8p5\", UID:\"96888a78-1ba7-448b-acd1-5c7aa1effd2e\", APIVersion:\"argoproj.io/v1alpha1\", ResourceVersion:\"79186\", FieldPath:\"\"}): type: 'Normal' reason: 'WorkflowRunning' Workflow Running"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="$ TryAcquire called in a processedTmpl.Synchronization"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="HERE2 LockName is :&{argo mutex-deadlock-test-sn8p5  Mutex}"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="HERE HERE HOLDER_KEY:  argo/deadlock-test-sn8p5/deadlock-test-sn8p5"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Added to Queue by  argo/deadlock-test-sn8p5/deadlock-test-sn8p5" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Added into queue: argo/deadlock-test-sn8p5/deadlock-test-sn8p5" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mHERE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+[32m controller | [margo/deadlock-test-sn8p5/deadlock-test-sn8p5
+[32m controller | [mmap[]
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Acquired for  argo/deadlock-test-sn8p5/deadlock-test-sn8p5"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=info msg="argo/Mutex/mutex-deadlock-test-sn8p5 acquired by argo/deadlock-test-sn8p5/deadlock-test-sn8p5. Lock availability: 0/1" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=info msg="Node deadlock-test-sn8p5 acquired synchronization lock" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Initializing node deadlock-test-sn8p5: template: *v1alpha1.WorkflowStep (main-steps), boundaryID: " namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=info msg="Steps node deadlock-test-sn8p5 initialized Running" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Initializing node deadlock-test-sn8p5[0]: template: *v1alpha1.WorkflowStep invalid (https://argoproj.github.io/argo-workflows/templates/), boundaryID: deadlock-test-sn8p5" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=info msg="StepGroup node deadlock-test-sn8p5-880363696 initialized Running" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Evaluating node deadlock-test-sn8p5[0].main: template: *v1alpha1.WorkflowStep (main-container), boundaryID: deadlock-test-sn8p5" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Initializing node deadlock-test-sn8p5[0].main: template: *v1alpha1.WorkflowStep (main-container), boundaryID: deadlock-test-sn8p5" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=info msg="Pod node deadlock-test-sn8p5-1966250163 initialized Pending" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug msg="Executing node deadlock-test-sn8p5[0].main with container template: main-container\n" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.569Z" level=debug namespace=argo needLocation=true workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.570Z" level=debug msg="Creating Pod: deadlock-test-sn8p5[0].main (deadlock-test-sn8p5-main-container-1966250163)" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.571Z" level=info msg="Create events 201"
+[32m controller | [mtime="2022-11-10T13:09:12.575Z" level=info msg="Create pods 201"
+[32m controller | [mtime="2022-11-10T13:09:12.575Z" level=info msg="Created pod: deadlock-test-sn8p5[0].main (deadlock-test-sn8p5-main-container-1966250163)" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.575Z" level=info msg="Workflow step group node deadlock-test-sn8p5-880363696 not yet completed" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.575Z" level=info msg="TaskSet Reconciliation" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.575Z" level=info msg=reconcileAgentPod namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.575Z" level=debug msg="Log changes patch: {\"metadata\":{\"annotations\":{\"workflows.argoproj.io/pod-name-format\":\"v2\"},\"labels\":{\"workflows.argoproj.io/phase\":\"Running\"}},\"spec\":{\"activeDeadlineSeconds\":300,\"podSpecPatch\":\"terminationGracePeriodSeconds: 3\\n\"},\"status\":{\"artifactGCStatus\":{\"notSpecified\":true},\"artifactRepositoryRef\":{\"artifactRepository\":{\"archiveLogs\":true,\"s3\":{\"accessKeySecret\":{\"key\":\"accesskey\",\"name\":\"my-minio-cred\"},\"bucket\":\"my-bucket\",\"endpoint\":\"minio:9000\",\"insecure\":true,\"secretKeySecret\":{\"key\":\"secretkey\",\"name\":\"my-minio-cred\"}}},\"configMap\":\"artifact-repositories\",\"key\":\"default-v1\",\"namespace\":\"argo\"},\"nodes\":{\"deadlock-test-sn8p5\":{\"children\":[\"deadlock-test-sn8p5-880363696\"],\"displayName\":\"deadlock-test-sn8p5\",\"finishedAt\":null,\"id\":\"deadlock-test-sn8p5\",\"name\":\"deadlock-test-sn8p5\",\"phase\":\"Running\",\"startedAt\":\"2022-11-10T02:09:12Z\",\"templateName\":\"main-steps\",\"templateScope\":\"local/deadlock-test-sn8p5\",\"type\":\"Steps\"},\"deadlock-test-sn8p5-1966250163\":{\"boundaryID\":\"deadlock-test-sn8p5\",\"displayName\":\"main\",\"finishedAt\":null,\"id\":\"deadlock-test-sn8p5-1966250163\",\"name\":\"deadlock-test-sn8p5[0].main\",\"phase\":\"Pending\",\"startedAt\":\"2022-11-10T02:09:12Z\",\"templateName\":\"main-container\",\"templateScope\":\"local/deadlock-test-sn8p5\",\"type\":\"Pod\"},\"deadlock-test-sn8p5-880363696\":{\"boundaryID\":\"deadlock-test-sn8p5\",\"children\":[\"deadlock-test-sn8p5-1966250163\"],\"displayName\":\"[0]\",\"finishedAt\":null,\"id\":\"deadlock-test-sn8p5-880363696\",\"name\":\"deadlock-test-sn8p5[0]\",\"phase\":\"Running\",\"startedAt\":\"2022-11-10T02:09:12Z\",\"templateScope\":\"local/deadlock-test-sn8p5\",\"type\":\"StepGroup\"}},\"phase\":\"Running\",\"startedAt\":\"2022-11-10T02:09:12Z\",\"synchronization\":{\"mutex\":{\"holding\":[{\"holder\":\"deadlock-test-sn8p5\",\"mutex\":\"argo/Mutex/mutex-deadlock-test-sn8p5\"}]}}}}"
+[32m controller | [mtime="2022-11-10T13:09:12.576Z" level=info msg="Workflow to be dehydrated" Workflow Size=1505
+[32m controller | [mtime="2022-11-10T13:09:12.578Z" level=info msg="Update workflows 200"
+[32m controller | [mtime="2022-11-10T13:09:12.578Z" level=info msg="Workflow update successful" namespace=argo phase=Running resourceVersion=79192 workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:12.578Z" level=debug msg="Event(v1.ObjectReference{Kind:\"Workflow\", Namespace:\"argo\", Name:\"deadlock-test-sn8p5\", UID:\"96888a78-1ba7-448b-acd1-5c7aa1effd2e\", APIVersion:\"argoproj.io/v1alpha1\", ResourceVersion:\"79192\", FieldPath:\"\"}): type: 'Normal' reason: 'WorkflowNodeRunning' Running node deadlock-test-sn8p5"
+[32m controller | [mtime="2022-11-10T13:09:12.578Z" level=debug msg="Event(v1.ObjectReference{Kind:\"Workflow\", Namespace:\"argo\", Name:\"deadlock-test-sn8p5\", UID:\"96888a78-1ba7-448b-acd1-5c7aa1effd2e\", APIVersion:\"argoproj.io/v1alpha1\", ResourceVersion:\"79192\", FieldPath:\"\"}): type: 'Normal' reason: 'WorkflowNodeRunning' Running node deadlock-test-sn8p5[0]"
+[32m controller | [mtime="2022-11-10T13:09:12.580Z" level=info msg="Create events 201"
+[32m controller | [mtime="2022-11-10T13:09:12.582Z" level=info msg="Create events 201"
+[33m       logs | [m/home/isubasinghe/go/bin/stern -l workflows.argoproj.io/workflow 2>&1
+[33m       logs | [m+ deadlock-test-sn8p5-main-container-1966250163 › init
+[33m       logs | [mdeadlock-test-sn8p5-main-container-1966250163 init time="2022-11-10T02:09:13.144Z" level=info msg="Starting Workflow Executor" version=untagged
+[33m       logs | [mdeadlock-test-sn8p5-main-container-1966250163 init time="2022-11-10T02:09:13.147Z" level=info msg="Using executor retry strategy" Duration=1s Factor=1.6 Jitter=0.5 Steps=5
+[33m       logs | [mdeadlock-test-sn8p5-main-container-1966250163 init time="2022-11-10T02:09:13.147Z" level=info msg="Executor initialized" deadline="2022-11-10 02:14:12 +0000 UTC" includeScriptOutput=false namespace=argo podName=deadlock-test-sn8p5-main-container-1966250163 template="{\"name\":\"main-container\",\"inputs\":{},\"outputs\":{},\"metadata\":{},\"container\":{\"name\":\"\",\"image\":\"busybox:latest\",\"command\":[\"sh\"],\"args\":[\"-c\",\"sleep 120; exit 0\"],\"resources\":{}},\"archiveLocation\":{\"archiveLogs\":true,\"s3\":{\"endpoint\":\"minio:9000\",\"bucket\":\"my-bucket\",\"insecure\":true,\"accessKeySecret\":{\"name\":\"my-minio-cred\",\"key\":\"accesskey\"},\"secretKeySecret\":{\"name\":\"my-minio-cred\",\"key\":\"secretkey\"},\"key\":\"deadlock-test-sn8p5/deadlock-test-sn8p5-main-container-1966250163\"}}}" version="&Version{Version:untagged,BuildDate:2022-11-09T22:38:56Z,GitCommit:0db504aa1e78f7dea22196b1098bfda4f4caa25c,GitTag:untagged,GitTreeState:clean,GoVersion:go1.18.8,Compiler:gc,Platform:linux/amd64,}"
+[33m       logs | [mdeadlock-test-sn8p5-main-container-1966250163 init time="2022-11-10T02:09:13.218Z" level=info msg="Start loading input artifacts..."
+[33m       logs | [mdeadlock-test-sn8p5-main-container-1966250163 init time="2022-11-10T02:09:13.218Z" level=info msg="Alloc=7125 TotalAlloc=12121 Sys=23250 NumGC=3 Goroutines=2"
+[32m controller | [mtime="2022-11-10T13:09:13.463Z" level=info msg="Processing workflow" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=info msg="Task-result reconciliation" namespace=argo numObjs=0 workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=info msg="node changed" namespace=argo new.message=PodInitializing new.phase=Pending new.progress=0/1 nodeID=deadlock-test-sn8p5-1966250163 old.message= old.phase=Pending old.progress=0/1 workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Evaluating node deadlock-test-sn8p5: template: *v1alpha1.WorkflowStep (main-steps), boundaryID: " namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Executing node deadlock-test-sn8p5 of Steps is Running" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="$ TryAcquire called in a processedTmpl.Synchronization"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="HERE2 LockName is :&{argo mutex-deadlock-test-sn8p5  Mutex}"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="HERE HERE HOLDER_KEY:  argo/deadlock-test-sn8p5/deadlock-test-sn8p5"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Added to Queue by  argo/deadlock-test-sn8p5/deadlock-test-sn8p5" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Lock is already acquired by argo/deadlock-test-sn8p5/deadlock-test-sn8p5" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mHERE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+[32m controller | [margo/deadlock-test-sn8p5/deadlock-test-sn8p5
+[32m controller | [mmap[argo/deadlock-test-sn8p5/deadlock-test-sn8p5:true]
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="argo/deadlock-test-sn8p5/deadlock-test-sn8p5 is already holding a lock" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=info msg="Node deadlock-test-sn8p5 acquired synchronization lock" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Evaluating node deadlock-test-sn8p5[0].main: template: *v1alpha1.WorkflowStep (main-container), boundaryID: deadlock-test-sn8p5" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Executing node deadlock-test-sn8p5[0].main of Pod is Pending" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Executing node deadlock-test-sn8p5[0].main with container template: main-container\n" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Skipped pod deadlock-test-sn8p5[0].main (deadlock-test-sn8p5-1966250163) creation: already exists" namespace=argo podPhase=Pending workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=info msg="Workflow step group node deadlock-test-sn8p5-880363696 not yet completed" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=info msg="TaskSet Reconciliation" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=info msg=reconcileAgentPod namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=debug msg="Log changes patch: {\"status\":{\"conditions\":[{\"status\":\"False\",\"type\":\"PodRunning\"}],\"nodes\":{\"deadlock-test-sn8p5-1966250163\":{\"hostNodeName\":\"k3d-k3s-default-server-0\",\"message\":\"PodInitializing\"}}}}"
+[32m controller | [mtime="2022-11-10T13:09:13.464Z" level=info msg="Workflow to be dehydrated" Workflow Size=1791
+[32m controller | [mtime="2022-11-10T13:09:13.467Z" level=info msg="Update workflows 200"
+[32m controller | [mtime="2022-11-10T13:09:13.467Z" level=info msg="Workflow update successful" namespace=argo phase=Running resourceVersion=79202 workflow=deadlock-test-sn8p5
+[33m       logs | [m- deadlock-test-sn8p5-main-container-1966250163 › init
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=info msg="Processing workflow" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=info msg="Task-result reconciliation" namespace=argo numObjs=0 workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=info msg="node unchanged" namespace=argo nodeID=deadlock-test-sn8p5-1966250163 workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=debug msg="Evaluating node deadlock-test-sn8p5: template: *v1alpha1.WorkflowStep (main-steps), boundaryID: " namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=debug msg="Executing node deadlock-test-sn8p5 of Steps is Running" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=debug msg="$ TryAcquire called in a processedTmpl.Synchronization"
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=debug msg="HERE2 LockName is :&{argo mutex-deadlock-test-sn8p5  Mutex}"
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=debug msg="HERE HERE HOLDER_KEY:  argo/deadlock-test-sn8p5/deadlock-test-sn8p5"
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=debug msg="Added to Queue by  argo/deadlock-test-sn8p5/deadlock-test-sn8p5" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=debug msg="Lock is already acquired by argo/deadlock-test-sn8p5/deadlock-test-sn8p5" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mHERE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+[32m controller | [margo/deadlock-test-sn8p5/deadlock-test-sn8p5
+[32m controller | [mmap[argo/deadlock-test-sn8p5/deadlock-test-sn8p5:true]
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=debug msg="argo/deadlock-test-sn8p5/deadlock-test-sn8p5 is already holding a lock" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.334Z" level=info msg="Node deadlock-test-sn8p5 acquired synchronization lock" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=debug msg="Evaluating node deadlock-test-sn8p5[0].main: template: *v1alpha1.WorkflowStep (main-container), boundaryID: deadlock-test-sn8p5" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=debug msg="Executing node deadlock-test-sn8p5[0].main of Pod is Pending" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=debug msg="Executing node deadlock-test-sn8p5[0].main with container template: main-container\n" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=debug msg="Skipped pod deadlock-test-sn8p5[0].main (deadlock-test-sn8p5-1966250163) creation: already exists" namespace=argo podPhase=Pending workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=info msg="Workflow step group node deadlock-test-sn8p5-880363696 not yet completed" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=info msg="TaskSet Reconciliation" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=info msg=reconcileAgentPod namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=debug msg="Log changes patch: {}"
+[32m controller | [mtime="2022-11-10T13:09:15.335Z" level=info msg="Workflow to be dehydrated" Workflow Size=1791
+[32m controller | [mtime="2022-11-10T13:09:15.340Z" level=info msg="Update workflows 200"
+[32m controller | [mtime="2022-11-10T13:09:15.340Z" level=info msg="Workflow update successful" namespace=argo phase=Running resourceVersion=79202 workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:17.462Z" level=info msg="Get leases 200"
+[32m controller | [mtime="2022-11-10T13:09:17.465Z" level=info msg="Update leases 200"
+[33m       logs | [m+ deadlock-test-sn8p5-main-container-1966250163 › wait
+[33m       logs | [m+ deadlock-test-sn8p5-main-container-1966250163 › main
+[33m       logs | [mdeadlock-test-sn8p5-main-container-1966250163 wait time="2022-11-10T02:09:14.446Z" level=info msg="Starting Workflow Executor" version=untagged
+[33m       logs | [mdeadlock-test-sn8p5-main-container-1966250163 wait time="2022-11-10T02:09:14.447Z" level=info msg="Using executor retry strategy" Duration=1s Factor=1.6 Jitter=0.5 Steps=5
+[33m       logs | [mdeadlock-test-sn8p5-main-container-1966250163 wait time="2022-11-10T02:09:14.447Z" level=info msg="Executor initialized" deadline="2022-11-10 02:14:12 +0000 UTC" includeScriptOutput=false namespace=argo podName=deadlock-test-sn8p5-main-container-1966250163 template="{\"name\":\"main-container\",\"inputs\":{},\"outputs\":{},\"metadata\":{},\"container\":{\"name\":\"\",\"image\":\"busybox:latest\",\"command\":[\"sh\"],\"args\":[\"-c\",\"sleep 120; exit 0\"],\"resources\":{}},\"archiveLocation\":{\"archiveLogs\":true,\"s3\":{\"endpoint\":\"minio:9000\",\"bucket\":\"my-bucket\",\"insecure\":true,\"accessKeySecret\":{\"name\":\"my-minio-cred\",\"key\":\"accesskey\"},\"secretKeySecret\":{\"name\":\"my-minio-cred\",\"key\":\"secretkey\"},\"key\":\"deadlock-test-sn8p5/deadlock-test-sn8p5-main-container-1966250163\"}}}" version="&Version{Version:untagged,BuildDate:2022-11-09T22:38:56Z,GitCommit:0db504aa1e78f7dea22196b1098bfda4f4caa25c,GitTag:untagged,GitTreeState:clean,GoVersion:go1.18.8,Compiler:gc,Platform:linux/amd64,}"
+[33m       logs | [mdeadlock-test-sn8p5-main-container-1966250163 wait time="2022-11-10T02:09:14.447Z" level=info msg="Starting deadline monitor"
+[33m       logs | [mdeadlock-test-sn8p5-main-container-1966250163 main time="2022-11-10T02:09:17.348Z" level=info msg="capturing logs" argo=true
+[32m controller | [mtime="2022-11-10T13:09:19.349Z" level=info msg="Processing workflow" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=info msg="Task-result reconciliation" namespace=argo numObjs=0 workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=info msg="node changed" namespace=argo new.message= new.phase=Running new.progress=0/1 nodeID=deadlock-test-sn8p5-1966250163 old.message=PodInitializing old.phase=Pending old.progress=0/1 workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Evaluating node deadlock-test-sn8p5: template: *v1alpha1.WorkflowStep (main-steps), boundaryID: " namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Executing node deadlock-test-sn8p5 of Steps is Running" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="$ TryAcquire called in a processedTmpl.Synchronization"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="HERE2 LockName is :&{argo mutex-deadlock-test-sn8p5  Mutex}"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="HERE HERE HOLDER_KEY:  argo/deadlock-test-sn8p5/deadlock-test-sn8p5"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Added to Queue by  argo/deadlock-test-sn8p5/deadlock-test-sn8p5" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Lock is already acquired by argo/deadlock-test-sn8p5/deadlock-test-sn8p5" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mHERE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+[32m controller | [margo/deadlock-test-sn8p5/deadlock-test-sn8p5
+[32m controller | [mmap[argo/deadlock-test-sn8p5/deadlock-test-sn8p5:true]
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="argo/deadlock-test-sn8p5/deadlock-test-sn8p5 is already holding a lock" mutex=argo/Mutex/mutex-deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=info msg="Node deadlock-test-sn8p5 acquired synchronization lock" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Evaluating node deadlock-test-sn8p5[0].main: template: *v1alpha1.WorkflowStep (main-container), boundaryID: deadlock-test-sn8p5" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.WorkflowStep (main-container)"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Executing node deadlock-test-sn8p5[0].main of Pod is Running" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Resolving the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Getting the template" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Getting the template by name" base="*v1alpha1.Workflow (namespace=argo,name=deadlock-test-sn8p5)" depth=0 tmpl="*v1alpha1.NodeStatus (main-steps)"
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Executing node deadlock-test-sn8p5[0].main with container template: main-container\n" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=debug msg="Skipped pod deadlock-test-sn8p5[0].main (deadlock-test-sn8p5-1966250163) creation: already exists" namespace=argo podPhase=Running workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=info msg="Workflow step group node deadlock-test-sn8p5-880363696 not yet completed" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=info msg="TaskSet Reconciliation" namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.350Z" level=info msg=reconcileAgentPod namespace=argo workflow=deadlock-test-sn8p5
+[32m controller | [mtime="2022-11-10T13:09:19.351Z" level=debug msg="Log changes patch: {\"status\":{\"conditions\":[{\"status\":\"True\",\"type\":\"PodRunning\"}],\"nodes\":{\"deadlock-test-sn8p5-1966250163\":{\"message\":null,\"phase\":\"Running\"}}}}"
+[32m controller | [mtime="2022-11-10T13:0
