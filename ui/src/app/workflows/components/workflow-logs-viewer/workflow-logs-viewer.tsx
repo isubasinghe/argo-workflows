@@ -2,6 +2,7 @@ import * as React from 'react';
 import {useEffect, useState} from 'react';
 
 import {Autocomplete} from 'argo-ui';
+import moment = require('moment-timezone');
 import {Observable} from 'rxjs';
 import {map, publishReplay, refCount} from 'rxjs/operators';
 import * as models from '../../../../models';
@@ -13,6 +14,8 @@ import {Links} from '../../../shared/components/links';
 import {getPodName, getTemplateNameFromNode} from '../../../shared/pod-name';
 import {services} from '../../../shared/services';
 import {FullHeightLogsViewer} from './full-height-logs-viewer';
+
+const DEFAULT_TZ = process.env.DEFAULT_TZ || 'UTC';
 
 interface WorkflowLogsViewerProps {
     workflow: models.Workflow;
@@ -26,6 +29,43 @@ function identity<T>(value: T) {
     return () => value;
 }
 
+// USED FOR MANUAL TESTING
+// const timeSpammer:Observable<string> = new Observable((subscriber) => {
+//   setInterval(() => {
+//     subscriber.next('time="2022-11-27T04:07:37.291Z" level=info msg="running spammer" argo=true\n');
+//   }, 2000);
+// });
+
+interface ParsedTime {
+    quoted: string;
+    fullstring: string;
+}
+// extract the time field from a string
+const parseTime = (formattedString: string): undefined | ParsedTime => {
+    const re = new RegExp('time="(.*?)"');
+    const table = re.exec(formattedString);
+    if (table === null || table.length !== 2) {
+        return undefined;
+    }
+    return {quoted: table[1], fullstring: table[0]};
+};
+
+const parseAndTransform = (formattedString: string, timezone: string) => {
+    const maybeTime = parseTime(formattedString);
+    if (maybeTime === undefined) {
+        return formattedString;
+    }
+
+    try {
+        const newTime = moment.tz(maybeTime.quoted, timezone).format('YYYY-MM-DDTHH:mm:ss z');
+        const newFormattedTime = `time=\"${newTime}\"`;
+        const newFormattedString = formattedString.replace(maybeTime.fullstring, newFormattedTime);
+        return newFormattedString;
+    } catch {
+        return formattedString;
+    }
+};
+
 export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container, archived}: WorkflowLogsViewerProps) => {
     const [podName, setPodName] = useState(initialPodName || '');
     const [selectedContainer, setContainer] = useState(container);
@@ -33,6 +73,12 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
     const [error, setError] = useState<Error>();
     const [loaded, setLoaded] = useState(false);
     const [logsObservable, setLogsObservable] = useState<Observable<string>>();
+    // timezone used for timezone formatting
+    const [timezone, setTimezone] = useState<string>(DEFAULT_TZ);
+    // timezone used for ui rendering only
+    const [uiTimezone, setUITimezone] = useState<string>(DEFAULT_TZ);
+    // list of timezones moment tz supports
+    const [timezones, setTimezones] = useState<string[]>([]);
 
     useEffect(() => {
         setError(null);
@@ -40,15 +86,25 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
         const source = services.workflows.getContainerLogs(workflow, podName, nodeId, selectedContainer, grep, archived).pipe(
             map(e => (!podName ? e.podName + ': ' : '') + e.content + '\n'),
             // this next line highlights the search term in bold with a yellow background, white text
-            map(x => {
-                if (grep !== '') {
-                    return x.replace(new RegExp(grep, 'g'), y => '\u001b[1m\u001b[43;1m\u001b[37m' + y + '\u001b[0m');
-                }
-                return x;
-            }),
+            map(
+                x => {
+                    if (grep !== '') {
+                        return x.replace(new RegExp(grep, 'g'), y => '\u001b[1m\u001b[43;1m\u001b[37m' + y + '\u001b[0m');
+                    }
+                    return x;
+                },
+
+                map((x: string) => parseAndTransform(x, timezone))
+            ),
             publishReplay(),
             refCount()
         );
+
+        // const source = timeSpammer.pipe(
+        //   map((x)=> parseAndTransform(x, timezone)),
+        //   publishReplay(),
+        //   refCount()
+        // );
         const subscription = source.subscribe(
             () => setLoaded(true),
             setError,
@@ -56,7 +112,7 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
         );
         setLogsObservable(source);
         return () => subscription.unsubscribe();
-    }, [workflow.metadata.namespace, workflow.metadata.name, podName, selectedContainer, grep, archived]);
+    }, [workflow.metadata.namespace, workflow.metadata.name, podName, selectedContainer, grep, archived, timezone]);
 
     // filter allows us to introduce a short delay, before we actually change grep
     const [logFilter, setLogFilter] = useState('');
@@ -64,6 +120,16 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
         const x = setTimeout(() => setGrep(logFilter), 1000);
         return () => clearTimeout(x);
     }, [logFilter]);
+
+    useEffect(() => {
+        const tzs = moment.tz.names();
+        const tzsSet = new Set<string>();
+        tzs.forEach(item => {
+            tzsSet.add(item);
+        });
+        const flatTzs = [...tzsSet];
+        setTimezones(flatTzs);
+    }, []);
 
     const annotations = workflow.metadata.annotations || {};
     const podNameVersion = annotations[ANNOTATION_KEY_POD_NAME_VERSION];
@@ -96,7 +162,7 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
             )
         )
     ];
-
+    const filteredTimezones = timezones.filter(tz => tz.startsWith(uiTimezone) || uiTimezone === '');
     return (
         <div className='workflow-logs-viewer'>
             <h3>Logs</h3>
@@ -116,7 +182,20 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
                 />{' '}
                 / <Autocomplete items={containers} value={selectedContainer} onSelect={setContainer} />
                 <span className='fa-pull-right'>
-                    <i className='fa fa-filter' /> <input type='search' defaultValue={logFilter} onChange={v => setLogFilter(v.target.value)} placeholder='Filter (regexp)...' />
+                    <div className='log-menu'>
+                        <i className='fa fa-filter' />{' '}
+                        <input type='search' defaultValue={logFilter} onChange={v => setLogFilter(v.target.value)} placeholder='Filter (regexp)...' />
+                        <i className='fa fa-globe' />{' '}
+                        <Autocomplete
+                            items={filteredTimezones}
+                            value={uiTimezone}
+                            onChange={v => setUITimezone(v.target.value)}
+                            onSelect={tz => {
+                                setUITimezone(tz);
+                                setTimezone(tz);
+                            }}
+                        />
+                    </div>
                 </span>
             </div>
             <ErrorNotice error={error} />
