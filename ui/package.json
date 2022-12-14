@@ -11,11 +11,12 @@
         "lint": "tslint --fix -p ./src/app",
         "test": "jest"
     },
-    "engines" : {
-        "node" : ">=16"
+    "engines": {
+        "node": ">=16"
     },
     "dependencies": {
         "argo-ui": "https://github.com/argoproj/argo-ui.git#v2.5.0",
+        "badmagic": "^0.0.38",
         "chart.js": "^2.9.4",
         "chartjs-plugin-annotation": "^0.5.7",
         "classnames": "^2.3.2",
@@ -37,7 +38,8 @@
         "react-router-dom": "^4.2.2",
         "superagent": "^8.0.5",
         "superagent-promise": "^1.1.0",
-        "swagger-ui-react": "^4.12.0"
+        "swagger-ui-react": "^4.12.0",
+        "tailwindcss": "^3.2.4"
     },
     "devDependencies": {
         "@babel/core": "^7.20.2",
