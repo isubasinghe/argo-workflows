@@ -444,6 +444,7 @@ func (woc *wfOperationCtx) executeDAGTask(ctx context.Context, dagCtx *dagContex
 		}
 		execute, proceed, err := dagCtx.evaluateDependsLogic(taskName)
 		if err != nil {
+			log.Infof("isitha1")
 			woc.initializeNode(nodeName, wfv1.NodeTypeSkipped, dagTemplateScope, task, dagCtx.boundaryID, wfv1.NodeError, err.Error())
 			connectDependencies(nodeName)
 			return
@@ -453,6 +454,7 @@ func (woc *wfOperationCtx) executeDAGTask(ctx context.Context, dagCtx *dagContex
 			return
 		}
 		if !execute {
+			log.Infof("isitha2")
 			// Given the results of this node's dependencies, this node should not be executed. Mark it omitted
 			woc.initializeNode(nodeName, wfv1.NodeTypeSkipped, dagTemplateScope, task, dagCtx.boundaryID, wfv1.NodeOmitted, "omitted: depends condition not met")
 			connectDependencies(nodeName)
@@ -464,6 +466,7 @@ func (woc *wfOperationCtx) executeDAGTask(ctx context.Context, dagCtx *dagContex
 	// First resolve/substitute params/artifacts from our dependencies
 	newTask, err := woc.resolveDependencyReferences(dagCtx, task)
 	if err != nil {
+		log.Infof("isitha3")
 		woc.initializeNode(nodeName, wfv1.NodeTypeSkipped, dagTemplateScope, task, dagCtx.boundaryID, wfv1.NodeError, err.Error())
 		connectDependencies(nodeName)
 		return
@@ -473,6 +476,8 @@ func (woc *wfOperationCtx) executeDAGTask(ctx context.Context, dagCtx *dagContex
 	// expandedTasks will be a single element list of the same task
 	expandedTasks, err := expandTask(*newTask)
 	if err != nil {
+
+		log.Infof("isitha4 due to err %s", err)
 		woc.initializeNode(nodeName, wfv1.NodeTypeSkipped, dagTemplateScope, task, dagCtx.boundaryID, wfv1.NodeError, err.Error())
 		connectDependencies(nodeName)
 		return
@@ -485,10 +490,14 @@ func (woc *wfOperationCtx) executeDAGTask(ctx context.Context, dagCtx *dagContex
 		// DAG task with empty withParams list should be skipped
 		if len(expandedTasks) == 0 {
 			skipReason := "Skipped, empty params"
+
+			log.Infof("isitha5")
 			woc.initializeNode(nodeName, wfv1.NodeTypeSkipped, dagTemplateScope, task, dagCtx.boundaryID, wfv1.NodeSkipped, skipReason)
 			connectDependencies(nodeName)
 		} else if taskGroupNode == nil {
 			connectDependencies(nodeName)
+
+			log.Infof("isitha6")
 			taskGroupNode = woc.initializeNode(nodeName, wfv1.NodeTypeTaskGroup, dagTemplateScope, task, dagCtx.boundaryID, wfv1.NodeRunning, "")
 		}
 	}
@@ -504,11 +513,15 @@ func (woc *wfOperationCtx) executeDAGTask(ctx context.Context, dagCtx *dagContex
 			// Check the task's when clause to decide if it should execute
 			proceed, err := shouldExecute(t.When)
 			if err != nil {
+
+				log.Infof("isitha7")
 				woc.initializeNode(taskNodeName, wfv1.NodeTypeSkipped, dagTemplateScope, task, dagCtx.boundaryID, wfv1.NodeError, err.Error())
 				continue
 			}
 			if !proceed {
 				skipReason := fmt.Sprintf("when '%s' evaluated false", t.When)
+
+				log.Infof("isitha8")
 				woc.initializeNode(taskNodeName, wfv1.NodeTypeSkipped, dagTemplateScope, task, dagCtx.boundaryID, wfv1.NodeSkipped, skipReason)
 				continue
 			}
@@ -696,16 +709,19 @@ func (d *dagContext) findLeafTaskNames(tasks []wfv1.DAGTask) []string {
 func expandTask(task wfv1.DAGTask) ([]wfv1.DAGTask, error) {
 	var err error
 	var items []wfv1.Item
+	log.Infof("expanding task now")
 	if len(task.WithItems) > 0 {
 		items = task.WithItems
 	} else if task.WithParam != "" {
 		err = json.Unmarshal([]byte(task.WithParam), &items)
 		if err != nil {
+			log.Infof("isitha4 was not able to unmarshal")
 			return nil, errors.Errorf(errors.CodeBadRequest, "withParam value could not be parsed as a JSON list: %s: %v", strings.TrimSpace(task.WithParam), err)
 		}
 	} else if task.WithSequence != nil {
 		items, err = expandSequence(task.WithSequence)
 		if err != nil {
+			log.Infof("isitha4 was not able to expand Sequence due to %s", err)
 			return nil, err
 		}
 	} else {
@@ -714,6 +730,7 @@ func expandTask(task wfv1.DAGTask) ([]wfv1.DAGTask, error) {
 
 	taskBytes, err := json.Marshal(task)
 	if err != nil {
+		log.Infof("isitha4 was not able to marshal")
 		return nil, errors.InternalWrapError(err)
 	}
 
@@ -730,8 +747,10 @@ func expandTask(task wfv1.DAGTask) ([]wfv1.DAGTask, error) {
 	expandedTasks := make([]wfv1.DAGTask, 0)
 	for i, item := range items {
 		var newTask wfv1.DAGTask
+		log.Infof("processing item %s for task %s", item.Value, task.Name)
 		newTaskName, err := processItem(tmpl, task.Name, i, item, &newTask, task.When)
 		if err != nil {
+			log.Infof("isitha4 was not able to process item %s", err)
 			return nil, err
 		}
 		newTask.Name = newTaskName

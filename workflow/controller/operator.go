@@ -15,13 +15,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/argoproj/argo-workflows/v3/util/secrets"
-
 	"github.com/antonmedv/expr"
+	"github.com/argoproj/argo-workflows/v3/util/secrets"
 	"github.com/argoproj/pkg/humanize"
 	argokubeerr "github.com/argoproj/pkg/kube/errors"
 	"github.com/argoproj/pkg/strftime"
 	jsonpatch "github.com/evanphx/json-patch"
+	"github.com/k0kubun/pp/v3"
 	log "github.com/sirupsen/logrus"
 	apiv1 "k8s.io/api/core/v1"
 	policyv1beta "k8s.io/api/policy/v1beta1"
@@ -1974,6 +1974,8 @@ func (woc *wfOperationCtx) executeTemplate(ctx context.Context, nodeName string,
 		node = woc.executePluginTemplate(nodeName, templateScope, processedTmpl, orgTmpl, opts)
 	default:
 		err = errors.Errorf(errors.CodeBadRequest, "Template '%s' missing specification", processedTmpl.Name)
+
+		log.Infof("isitha9")
 		return woc.initializeNode(nodeName, wfv1.NodeTypeSkipped, templateScope, orgTmpl, opts.boundaryID, wfv1.NodeError, err.Error()), err
 	}
 
@@ -2218,6 +2220,7 @@ var stepsOrDagSeparator = regexp.MustCompile(`^(\[\d+\])?\.`)
 
 // initializeExecutableNode initializes a node and stores the template.
 func (woc *wfOperationCtx) initializeExecutableNode(nodeName string, nodeType wfv1.NodeType, templateScope string, executeTmpl *wfv1.Template, orgTmpl wfv1.TemplateReferenceHolder, boundaryID string, phase wfv1.NodePhase, messages ...string) *wfv1.NodeStatus {
+	log.Infof("isitha10")
 	node := woc.initializeNode(nodeName, nodeType, templateScope, orgTmpl, boundaryID, phase)
 
 	// Set the input values to the node.
@@ -2245,6 +2248,8 @@ func (woc *wfOperationCtx) initializeNodeOrMarkError(node *wfv1.NodeStatus, node
 	if node != nil {
 		return woc.markNodeError(nodeName, err)
 	}
+
+	log.Infof("isitha11")
 	return woc.initializeNode(nodeName, wfv1.NodeTypeSkipped, templateScope, orgTmpl, boundaryID, wfv1.NodeError, err.Error())
 }
 
@@ -2798,10 +2803,12 @@ func (woc *wfOperationCtx) buildLocalScope(scope *wfScope, prefix string, node *
 }
 
 func (woc *wfOperationCtx) addOutputsToLocalScope(prefix string, outputs *wfv1.Outputs, scope *wfScope) {
+	woc.log.Infof("adding outputs to local scope")
 	if outputs == nil || scope == nil {
 		return
 	}
 	if prefix != "workflow" && outputs.Result != nil {
+		woc.log.Infof("added %s result to scope", *outputs.Result)
 		scope.addParamToScope(fmt.Sprintf("%s.outputs.result", prefix), *outputs.Result)
 	}
 	if prefix != "workflow" && outputs.ExitCode != nil {
@@ -2809,7 +2816,9 @@ func (woc *wfOperationCtx) addOutputsToLocalScope(prefix string, outputs *wfv1.O
 	}
 	for _, param := range outputs.Parameters {
 		if param.Value != nil {
-			scope.addParamToScope(fmt.Sprintf("%s.outputs.parameters.%s", prefix, param.Name), param.Value.String())
+			scopeParam := fmt.Sprintf("%s.outputs.parameters.%s", prefix, param.Name)
+			woc.log.Infof("adding %s to scope with value %s", scopeParam, param.Value.String())
+			scope.addParamToScope(scopeParam, param.Value.String())
 		}
 	}
 	for _, art := range outputs.Artifacts {
@@ -2822,6 +2831,7 @@ func (woc *wfOperationCtx) addOutputsToGlobalScope(outputs *wfv1.Outputs) {
 		return
 	}
 	for _, param := range outputs.Parameters {
+		woc.log.Infof("adding param to global scope key: <%s> with value: %s", param.Name, param.Value.String())
 		woc.addParamToGlobalScope(param)
 	}
 	for _, art := range outputs.Artifacts {
@@ -2859,6 +2869,7 @@ func (n loopNodes) Swap(i, j int) {
 // processAggregateNodeOutputs adds the aggregated outputs of a withItems/withParam template as a
 // parameter in the form of a JSON list
 func (woc *wfOperationCtx) processAggregateNodeOutputs(scope *wfScope, prefix string, childNodes []wfv1.NodeStatus) error {
+	woc.log.Infof("processing node outputs")
 	if len(childNodes) == 0 {
 		return nil
 	}
@@ -2868,12 +2879,15 @@ func (woc *wfOperationCtx) processAggregateNodeOutputs(scope *wfScope, prefix st
 	outputParamValueLists := make(map[string][]string)
 	resultsList := make([]wfv1.Item, 0)
 	for _, node := range childNodes {
+
+		log := woc.log.WithField("node", node.Name)
 		if node.Outputs == nil || node.Phase != wfv1.NodeSucceeded || node.Type == wfv1.NodeTypeRetry {
 			continue
 		}
 		if len(node.Outputs.Parameters) > 0 {
 			param := make(map[string]string)
 			for _, p := range node.Outputs.Parameters {
+				log.Infof("assigning <%s> to param[%s]", p.Value.String(), p.Name)
 				param[p.Name] = p.Value.String()
 				outputParamValueList := outputParamValueLists[p.Name]
 				outputParamValueList = append(outputParamValueList, p.Value.String())
@@ -2882,10 +2896,12 @@ func (woc *wfOperationCtx) processAggregateNodeOutputs(scope *wfScope, prefix st
 			paramList = append(paramList, param)
 		}
 		if node.Outputs.Result != nil {
+			log.Infof("Processing output result")
 			// Support the case where item may be a map
 			var item wfv1.Item
 			err := json.Unmarshal([]byte(*node.Outputs.Result), &item)
 			if err != nil {
+				log.Errorf("was unable to unmarshall due to %s", err)
 				return err
 			}
 			resultsList = append(resultsList, item)
@@ -2894,13 +2910,16 @@ func (woc *wfOperationCtx) processAggregateNodeOutputs(scope *wfScope, prefix st
 	{
 		resultsJSON, err := json.Marshal(resultsList)
 		if err != nil {
+			woc.log.Errorf("was unable to marshal resultsJSON list due to %s", err)
 			return err
 		}
 		key := fmt.Sprintf("%s.outputs.result", prefix)
+		woc.log.Infof("added %s key to scope", key)
 		scope.addParamToScope(key, string(resultsJSON))
 	}
 	outputsJSON, err := json.Marshal(paramList)
 	if err != nil {
+		woc.log.Infof("was unable to unmarshal due to %s", err)
 		return err
 	}
 	key := fmt.Sprintf("%s.outputs.parameters", prefix)
@@ -2910,8 +2929,10 @@ func (woc *wfOperationCtx) processAggregateNodeOutputs(scope *wfScope, prefix st
 		key = fmt.Sprintf("%s.outputs.parameters.%s", prefix, outputName)
 		valueListJSON, err := json.Marshal(valueList)
 		if err != nil {
+			woc.log.Errorf("was unable to marshal due to %s", err)
 			return err
 		}
+		woc.log.Infof("added %s to scope with value", key, string(valueListJSON))
 		scope.addParamToScope(key, string(valueListJSON))
 	}
 	return nil
@@ -3148,14 +3169,17 @@ func parseStringToDuration(durationString string) (time.Duration, error) {
 }
 
 func processItem(tmpl template.Template, name string, index int, item wfv1.Item, obj interface{}, whenCondition string) (string, error) {
+	log := log.WithField("task.Name", name)
 	replaceMap := make(map[string]string)
 	var newName string
 
 	switch item.GetType() {
 	case wfv1.String, wfv1.Number, wfv1.Bool:
+		log.Infof("Got a string number or bool")
 		replaceMap["item"] = fmt.Sprintf("%v", item)
 		newName = generateNodeName(name, index, item)
 	case wfv1.Map:
+		log.Infof("Got a map")
 		// Handle the case when withItems is a list of maps.
 		// vals holds stringified versions of the map items which are incorporated as part of the step name.
 		// For example if the item is: {"name": "jesse","group":"developer"}
@@ -3170,6 +3194,7 @@ func processItem(tmpl template.Template, name string, index int, item wfv1.Item,
 		}
 		jsonByteVal, err := json.Marshal(mapVal)
 		if err != nil {
+			log.Infof("failed to marshal due to %s", err)
 			return "", errors.InternalWrapError(err)
 		}
 		replaceMap["item"] = string(jsonByteVal)
@@ -3178,16 +3203,20 @@ func processItem(tmpl template.Template, name string, index int, item wfv1.Item,
 		sort.Strings(vals)
 		newName = generateNodeName(name, index, strings.Join(vals, ","))
 	case wfv1.List:
+		log.Infof("Got a list")
 		listVal := item.GetListVal()
 		byteVal, err := json.Marshal(listVal)
 		if err != nil {
+			log.Infof("was not able to marshal due to %s", err)
 			return "", errors.InternalWrapError(err)
 		}
 		replaceMap["item"] = string(byteVal)
 		newName = generateNodeName(name, index, listVal)
 	default:
+		log.Errorf("unexpected type received")
 		return "", errors.Errorf(errors.CodeBadRequest, "withItems[%d] expected string, number, list, or map. received: %v", index, item)
 	}
+	log.Printf("REPLACE MAP: %v", replaceMap)
 	var newStepStr string
 	// If when is not parameterised and evaluated to false, we are not executing nor resolving artifact,
 	// we allow parameter substitution to be Unresolved
@@ -3195,14 +3224,23 @@ func processItem(tmpl template.Template, name string, index int, item wfv1.Item,
 	proceed, err := shouldExecute(whenCondition)
 	if err == nil && !proceed {
 		newStepStr, err = tmpl.Replace(replaceMap, true)
+		if err != nil {
+			pp.Println(replaceMap)
+			log.Errorf("wasn't able to replace allowing for unresolved due to %s", err)
+		}
 	} else {
 		newStepStr, err = tmpl.Replace(replaceMap, false)
+		if err != nil {
+			pp.Println(replaceMap)
+			log.Errorf("wasn't able to replace due to %s", err)
+		}
 	}
 	if err != nil {
 		return "", err
 	}
 	err = json.Unmarshal([]byte(newStepStr), &obj)
 	if err != nil {
+		log.Errorf("was not able to unmarshal due to %s", err)
 		return "", errors.InternalWrapError(err)
 	}
 	return newName, nil
@@ -3720,6 +3758,7 @@ func (woc *wfOperationCtx) mergedTemplateDefaultsInto(originalTmpl *wfv1.Templat
 }
 
 func (woc *wfOperationCtx) substituteGlobalVariables(params common.Parameters) error {
+	woc.log.Infof("substituting global variables")
 	execWfSpec := woc.execWf.Spec
 
 	// To Avoid the stale Global parameter value substitution to templates.

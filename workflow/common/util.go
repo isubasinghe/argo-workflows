@@ -232,6 +232,7 @@ func SubstituteParams(tmpl *wfv1.Template, globalParams, localParams Parameters)
 	// Now replace the rest of substitutions (the ones that can be made) in the template
 	replaceMap = make(map[string]string)
 	for _, inParam := range globalReplacedTmpl.Inputs.Parameters {
+		log.Infof("processing inParam %s", inParam.Name)
 		if inParam.Value == nil && inParam.ValueFrom == nil {
 			return nil, errors.InternalErrorf("inputs.parameters.%s had no value", inParam.Name)
 		} else if inParam.Value != nil {
@@ -255,6 +256,7 @@ func SubstituteParams(tmpl *wfv1.Template, globalParams, localParams Parameters)
 		}
 	}
 	for _, param := range globalReplacedTmpl.Outputs.Parameters {
+		log.Infof("processing param for output params with key: %s", param.Name)
 		if param.ValueFrom != nil && param.ValueFrom.Path != "" {
 			replaceMap["outputs.parameters."+param.Name+".path"] = param.ValueFrom.Path
 		}

@@ -1,0 +1,78 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: dag-diamond-jsontest-
+  annotations:
+    workflows.argoproj.io/description: |
+      This is an example of of breaking withParam.
+spec:
+  entrypoint: diamond
+  templates:
+  - name: diamond
+    dag:
+      tasks:
+      - name: a
+        template: write-json
+        arguments:
+          parameters:
+            - name: dummyv1
+              value: "dv1"
+            - name: dummyv2
+              value: "dv2"
+      - name: b
+        arguments:
+          parameters:
+            - name: dummyv1
+              value: "tmp"
+            - name: dummyv2
+              value: "tmp2"
+            - name: jsonOut
+              value: "{{item}}"
+        withParam: "{{tasks.a.outputs.parameters.stepout}}"
+        depends: "a"
+        template: write-json
+      - name: c
+        arguments:
+          parameters:
+            - name: dummyv1
+              value: "tmp"
+            - name: dummyv2
+              value: "tmp2"
+            - name: jsonOut
+              value: "{{item}}"
+        withParam: "{{tasks.b.outputs.parameters.stepout}}"
+        depends: "b"
+        template: write-json
+      - name: d
+        arguments:
+          parameters:
+            - name: dummyv1
+              value: "{{item.dummyv1}}"
+            - name: dummyv2
+              value: "{{item.dummyv2}}"
+            - name: jsonOut
+              value: "{{item}}"
+        withParam: "{{tasks.c.outputs.parameters.stepout}}"
+        depends: "b && c"
+        template: write-json
+
+
+  - name: write-json
+    inputs:
+      parameters:
+      - name: dummyv1
+      - name: dummyv2
+    script:
+      image: python:alpine3.6
+      command: [python]
+      source: |
+        import json
+        args = [dict(dummyv1='one', dummyv2='two')]
+        with open("/tmp/myfile.json", "w") as fd:
+          tmp = json.dumps(args)
+          fd.write(tmp)
+    outputs:
+      parameters:
+      - name: stepout
+        valueFrom: 
+          path: /tmp/myfile.json

@@ -311,16 +311,23 @@ func (woc *wfOperationCtx) executeStepGroup(ctx context.Context, stepGroup []wfv
 
 // shouldExecute evaluates a already substituted when expression to decide whether or not a step should execute
 func shouldExecute(when string) (bool, error) {
+	log.Infof("running shouldExecute")
 	if when == "" {
 		return true, nil
 	}
+	panic("wtf")
+	log.Info("creating new evaluable expression")
 	expression, err := govaluate.NewEvaluableExpression(when)
 	if err != nil {
 		if strings.Contains(err.Error(), "Invalid token") {
+			log.Infof("invalid token err: %s", err)
 			return false, errors.Errorf(errors.CodeBadRequest, "Invalid 'when' expression '%s': %v (hint: try wrapping the affected expression in quotes (\"))", when, err)
 		}
+		log.Errorf("was not able to evaluate expression due to %s", err)
 		return false, errors.Errorf(errors.CodeBadRequest, "Invalid 'when' expression '%s': %v", when, err)
 	}
+
+	log.Info("created evaluable expression")
 	// The following loop converts govaluate variables (which we don't use), into strings. This
 	// allows us to have expressions like: "foo != bar" without requiring foo and bar to be quoted.
 	tokens := expression.Tokens()
@@ -333,18 +340,25 @@ func shouldExecute(when string) (bool, error) {
 		}
 		tokens[i] = tok
 	}
+	log.Info("creating evaluable expression from tokens")
 	expression, err = govaluate.NewEvaluableExpressionFromTokens(tokens)
 	if err != nil {
+		log.Errorf("failed to evaluate expression from tokens due to %s", err)
 		return false, errors.InternalWrapErrorf(err, "Failed to parse 'when' expression '%s': %v", when, err)
 	}
+	log.Info("created evaluable expression from tokens")
 	result, err := expression.Evaluate(nil)
 	if err != nil {
+		log.Errorf("failed to evaluate due to %s", err)
 		return false, errors.InternalWrapErrorf(err, "Failed to evaluate 'when' expresion '%s': %v", when, err)
 	}
+	log.Info("got result")
 	boolRes, ok := result.(bool)
 	if !ok {
+		log.Errorf("expected bool")
 		return false, errors.Errorf(errors.CodeBadRequest, "Expected boolean evaluation for '%s'. Got %v", when, result)
 	}
+	log.Info("evaluated successfully")
 	return boolRes, nil
 }
 
