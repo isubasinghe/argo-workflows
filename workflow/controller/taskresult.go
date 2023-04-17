@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"reflect"
 	"time"
 
@@ -50,7 +49,7 @@ func (wfc *WorkflowController) newWorkflowTaskResultInformer() cache.SharedIndex
 	return informer
 }
 
-func (woc *wfOperationCtx) taskResultReconciliation() error {
+func (woc *wfOperationCtx) taskResultReconciliation() {
 	objs, _ := woc.controller.taskResultInformer.GetIndexer().ByIndex(indexes.WorkflowIndex, woc.wf.Namespace+"/"+woc.wf.Name)
 	woc.log.WithField("numObjs", len(objs)).Info("Task-result reconciliation")
 	for _, obj := range objs {
@@ -58,9 +57,7 @@ func (woc *wfOperationCtx) taskResultReconciliation() error {
 		nodeID := result.Name
 		old, err := woc.wf.Status.Nodes.Get(nodeID)
 		if err != nil {
-			errorMsg := fmt.Sprintf("was unable to obtain node for %s", nodeID)
-			woc.log.Errorf(errorMsg)
-			return fmt.Errorf(errorMsg)
+			continue
 		}
 		newNode := old.DeepCopy()
 		if result.Outputs.HasOutputs() {
@@ -83,5 +80,4 @@ func (woc *wfOperationCtx) taskResultReconciliation() error {
 			woc.updated = true
 		}
 	}
-	return nil
 }
