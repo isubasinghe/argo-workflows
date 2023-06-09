@@ -12,7 +12,10 @@
   outputs = inputs:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
-      imports = [ inputs.treefmt-nix.flakeModule ];
+      imports = [ 
+        inputs.treefmt-nix.flakeModule 
+        ./codegen/go.nix
+      ];
       perSystem = { pkgs, lib, config, ... }:
         let
           argoConfig = import ./conf.nix;
@@ -180,13 +183,20 @@
               pname = package.name;
               inherit (package) version;
               inherit src;
-              vendorSha256 = "sha256-OKUiHkVZ/rfjPFs7Md5WDa5K1SNJQvLMxlYClUe7Umk=";
+              vendorSha256 = "sha256-NgINBFURhwG6f0Lbaf31hOmalayLUa8DNqsw533PYqI=";
               doCheck = false;
+              ldflags = [
+                "-X github.com/argoproj/argo-workflows/v3.version=2.1.0"
+              ];
             };
 
             mockery = pkgs.buildGoModule rec { 
               pname = "mockery";
               version = "2.10.0"; # upgrade this in the Makefile if upgraded here
+
+              ldflags = [
+                "-X github.com/vektra/mockery/v2/pkg/logging.SemVer=2.6.90"
+              ];
 
               src = pkgs.fetchFromGitHub {
                 owner = "vektra";
@@ -210,6 +220,10 @@
               };
               doCheck = false;
               vendorHash = "sha256-nOL2Ulo9VlOHAqJgZuHl7fGjz/WFAaWPdemplbQWcak=";
+              # TODO: fix this
+              postInstall = ''
+                mkdir -p $out/proto/
+              '';
             };
             grpc-ecosystem = pkgs.buildGoModule rec {
               pname = "grpc-ecosystem";
@@ -304,7 +318,7 @@
 
               goPackagePath = "bou.ke/staticfiles";
             };
-            default = config.packages.${package.name};
+            default = config.packages.mockery;
           };
 
           devShells = {

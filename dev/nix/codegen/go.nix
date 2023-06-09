@@ -1,0 +1,32 @@
+{ ... }:
+{
+  config = {
+    perSystem = { config, self', inputs', pkgs, system, ... }: {
+      packages = 
+        {
+          dockerImage = pkgs.dockerTools.buildImage
+            {
+              name = "sridca/emanote";
+              tag = "latest";
+              contents = [
+                self'.packages.mockery
+                self'.packages.default
+                # These are required for the GitLab CI runner
+                pkgs.coreutils
+                pkgs.bash_5
+              ];
+              config = {
+                WorkingDir = "/data";
+                Volumes = {
+                  "/data" = { };
+                };
+                Tmpfs = {
+                  "/tmp" = { };
+                };
+                Cmd = [ "${pkgs.lib.getExe self'.packages.default}" ];
+              };
+            };
+        };
+    };
+  };
+}
