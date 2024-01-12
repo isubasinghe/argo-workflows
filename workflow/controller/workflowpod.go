@@ -118,10 +118,13 @@ func (woc *wfOperationCtx) createWorkflowPod(ctx context.Context, nodeName strin
 			if err != nil {
 				return nil, err
 			}
-			if err := json.Unmarshal(a, &c); err != nil {
+
+			mergedContainerByte, err := strategicpatch.StrategicMergePatch(a, b, apiv1.Container{})
+			if err != nil {
 				return nil, err
 			}
-			if err = json.Unmarshal(b, &c); err != nil {
+			c = apiv1.Container{}
+			if err := json.Unmarshal(mergedContainerByte, &c); err != nil {
 				return nil, err
 			}
 		}
