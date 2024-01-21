@@ -52,7 +52,7 @@ require (
 	github.com/tidwall/gjson v1.15.0
 	github.com/valyala/fasttemplate v1.2.2
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/crypto v0.16.0
+	golang.org/x/crypto v0.17.0
 	golang.org/x/exp v0.0.0-20220602145555-4a0574d9293f
 	golang.org/x/oauth2 v0.13.0
 	golang.org/x/sync v0.3.0
@@ -76,7 +76,8 @@ require (
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
-	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
+	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
