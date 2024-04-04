@@ -2773,21 +2773,25 @@ func (woc *wfOperationCtx) getOutboundNodes(nodeID string) []string {
 	}
 	switch node.Type {
 	case wfv1.NodeTypeSkipped, wfv1.NodeTypeSuspend, wfv1.NodeTypeHTTP, wfv1.NodeTypePlugin:
+		woc.log.Infof("[AC] GON Returning quick node %v", node)
 		return []string{node.ID}
 	case wfv1.NodeTypePod:
 
 		// Recover the template that created this pod. If we can't just let the pod be its own outbound node
 		tmplCtx, err := woc.createTemplateContext(node.GetTemplateScope())
 		if err != nil {
+			woc.log.Infof("[AC] GON Returning GTC %v", node)
 			return []string{node.ID}
 		}
 		_, parentTemplate, _, err := tmplCtx.ResolveTemplate(node)
 		if err != nil {
+			woc.log.Infof("[AC] GON Returning parentT %v", node)
 			return []string{node.ID}
 		}
 
 		// If this pod does not come from a container set, its outbound node is itself
 		if parentTemplate.GetType() != wfv1.TemplateTypeContainerSet {
+			woc.log.Infof("[AC] GON Returning !CS %v", node)
 			return []string{node.ID}
 		}
 
@@ -2795,12 +2799,15 @@ func (woc *wfOperationCtx) getOutboundNodes(nodeID string) []string {
 		fallthrough
 	case wfv1.NodeTypeContainer, wfv1.NodeTypeTaskGroup:
 		if len(node.Children) == 0 {
+			woc.log.Infof("[AC] GON no child %v", node)
 			return []string{node.ID}
 		}
 		outboundNodes := make([]string, 0)
 		for _, child := range node.Children {
+			woc.log.Infof("[AC] GON CS TG %v", node)
 			outboundNodes = append(outboundNodes, woc.getOutboundNodes(child)...)
 		}
+		woc.log.Infof("[AC] GON CS TG %v", outboundNodes)
 		return outboundNodes
 	case wfv1.NodeTypeRetry:
 		numChildren := len(node.Children)
@@ -2812,6 +2819,7 @@ func (woc *wfOperationCtx) getOutboundNodes(nodeID string) []string {
 	for _, outboundNodeID := range node.OutboundNodes {
 		outbound = append(outbound, woc.getOutboundNodes(outboundNodeID)...)
 	}
+	woc.log.Infof("[AC] GON Returning uptree %v of %v", outbound, node)
 	return outbound
 }
 
