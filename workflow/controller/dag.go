@@ -33,6 +33,9 @@ type dagContext struct {
 	// in order to avoid duplicating work
 	visited map[string]bool
 
+	// maps nodeIDs to tasks
+	nodeToTask map[string]*wfv1.DAGTask
+
 	// tmpl is the template spec. it is needed to resolve hard-wired artifacts
 	tmpl *wfv1.Template
 
@@ -133,6 +136,7 @@ func (d *dagContext) assessDAGPhase(targetTasks []string, nodes wfv1.Nodes, isSh
 	// and ContinuesOn (every one of those features in unison) make this an undecidable problem.
 	// However, we can just use isShutdown to automatically fail the DAG.
 	log.Warnf("[AC] assesing DAG phase for %v", targetTasks)
+	log.Warnf("[AC] all tasks %+v", d.tasks)
 	if isShutdown {
 		log.Warnf("[AC] shutdown")
 		return wfv1.NodeFailed, nil
@@ -176,10 +180,11 @@ func (d *dagContext) assessDAGPhase(targetTasks []string, nodes wfv1.Nodes, isSh
 			return wfv1.NodeRunning, nil
 		}
 
-		// Only overwrite the branchPhase if this node completed, inherit parents failure. (If it didn't we can just inherit our parent's branchPhase).
+		// Only overwrite the branchPhase if this node completed. (If it didn't we can just inherit our parent's branchPhase).
 		if node.Completed() {
-			if !curr.phase.FailedOrError() {
-
+			task := d.nodeToTask[curr.nodeId]
+			// Always inherit parent's failure unless the parent node has an appropriate ContinuesOn
+			if !curr.phase.FailedOrError() || !task.ContinuesOn(curr.phase) {
 				log.Warnf("[AC] updated branchPhase to %s\n", node.Phase)
 				branchPhase = node.Phase
 			}
@@ -268,6 +273,7 @@ func (woc *wfOperationCtx) executeDAG(ctx context.Context, nodeName string, tmpl
 		boundaryID:     node.ID,
 		tasks:          tmpl.DAG.Tasks,
 		visited:        make(map[string]bool),
+		nodeToTask:     make(map[string]*wfv1.DAGTask),
 		tmpl:           tmpl,
 		wf:             woc.wf,
 		tmplCtx:        tmplCtx,
@@ -283,6 +289,11 @@ func (woc *wfOperationCtx) executeDAG(ctx context.Context, nodeName string, tmpl
 		targetTasks = dagCtx.findLeafTaskNames(tmpl.DAG.Tasks)
 	} else {
 		targetTasks = strings.Split(tmpl.DAG.Target, " ")
+	}
+
+	for _, task := range dagCtx.tasks {
+		taskNodeID := dagCtx.taskNodeID(task.Name)
+		dagCtx.nodeToTask[taskNodeID] = &task
 	}
 
 	// kick off execution of each target task asynchronously
@@ -321,6 +332,7 @@ func (woc *wfOperationCtx) executeDAG(ctx context.Context, nodeName string, tmpl
 		}
 	}
 
+	log.Infof("[ISITHA] nodeToTask is now %+v", dagCtx.nodeToTask)
 	// check if we are still running any tasks in this dag and return early if we do
 	dagPhase, err := dagCtx.assessDAGPhase(targetTasks, woc.wf.Status.Nodes, woc.GetShutdownStrategy().Enabled())
 	if err != nil {
