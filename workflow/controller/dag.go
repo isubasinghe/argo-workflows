@@ -36,6 +36,8 @@ type dagContext struct {
 	// maps nodeIDs to tasks
 	nodeToTask map[string]*wfv1.DAGTask
 
+	hookNodeIDs map[string]bool
+
 	// tmpl is the template spec. it is needed to resolve hard-wired artifacts
 	tmpl *wfv1.Template
 
@@ -183,8 +185,13 @@ func (d *dagContext) assessDAGPhase(targetTasks []string, nodes wfv1.Nodes, isSh
 		// Only overwrite the branchPhase if this node completed. (If it didn't we can just inherit our parent's branchPhase).
 		if node.Completed() {
 			task := d.nodeToTask[curr.nodeId]
+			log.Warnf("DEBUG: task %+v", task)
+			if task == nil {
+				log.Infof("TASK NODE WAS NIL: %+v", node)
+			}
+			is_hook := d.hookNodeIDs[curr.nodeId]
 			// Always inherit parent's failure unless the parent node has an appropriate ContinuesOn
-			if !curr.phase.FailedOrError() || !task.ContinuesOn(curr.phase) {
+			if !curr.phase.FailedOrError() || (!is_hook && !task.ContinuesOn(curr.phase)) {
 				log.Warnf("[AC] updated branchPhase to %s\n", node.Phase)
 				branchPhase = node.Phase
 			}
@@ -274,6 +281,7 @@ func (woc *wfOperationCtx) executeDAG(ctx context.Context, nodeName string, tmpl
 		tasks:          tmpl.DAG.Tasks,
 		visited:        make(map[string]bool),
 		nodeToTask:     make(map[string]*wfv1.DAGTask),
+		hookNodeIDs:    make(map[string]bool),
 		tmpl:           tmpl,
 		wf:             woc.wf,
 		tmplCtx:        tmplCtx,
@@ -293,6 +301,14 @@ func (woc *wfOperationCtx) executeDAG(ctx context.Context, nodeName string, tmpl
 
 	for _, task := range dagCtx.tasks {
 		taskNodeID := dagCtx.taskNodeID(task.Name)
+		for hookName := range task.Hooks {
+			if hookName == wfv1.ExitLifecycleEvent {
+				continue
+			}
+			hookNodeName := generateLifeHookNodeName(dagCtx.taskNodeName(task.Name), string(hookName))
+			hookNodeID := woc.wf.NodeID(hookNodeName)
+			dagCtx.hookNodeIDs[hookNodeID] = true
+		}
 		dagCtx.nodeToTask[taskNodeID] = &task
 	}
 

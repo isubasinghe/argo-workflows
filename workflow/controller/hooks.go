@@ -10,6 +10,7 @@ import (
 	"github.com/argoproj/argo-workflows/v3/util/expr/env"
 	"github.com/argoproj/argo-workflows/v3/util/template"
 	"github.com/argoproj/argo-workflows/v3/workflow/templateresolution"
+	log "github.com/sirupsen/logrus"
 )
 
 func (woc *wfOperationCtx) executeWfLifeCycleHook(ctx context.Context, tmplCtx *templateresolution.Context) (bool, error) {
@@ -20,6 +21,7 @@ func (woc *wfOperationCtx) executeWfLifeCycleHook(ctx context.Context, tmplCtx *
 			continue
 		}
 		hookNodeName := generateLifeHookNodeName(woc.wf.ObjectMeta.Name, string(hookName))
+		log.Infof("DEBUG: Generated WfLifeCycle Hook: %s", hookNodeName)
 		// To check a node was triggered.
 		hookedNode, _ := woc.wf.GetNodeByName(hookNodeName)
 		if hook.Expression == "" {
@@ -63,6 +65,7 @@ func (woc *wfOperationCtx) executeTmplLifeCycleHook(ctx context.Context, scope *
 			continue
 		}
 		hookNodeName := generateLifeHookNodeName(parentNode.Name, string(hookName))
+		log.Infof("DEBUG: Generated TmplLifeCycle Hook: %s", hookNodeName)
 		// To check a node was triggered
 		hookedNode, _ := woc.wf.GetNodeByName(hookNodeName)
 		if hook.Expression == "" {
