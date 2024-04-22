@@ -1,0 +1,680 @@
+17:59:03 system                | argo-server.1 started (pid=227539)
+17:59:03 system                | ui.1 started (pid=227542)
+17:59:03 system                | workflow-controller.1 started (pid=227544)
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03+10:00" level=info msg="index config" indexWorkflowSemaphoreKeys=true
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03+10:00" level=info msg="cron config" cronSyncPeriod=10s
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03+10:00" level=info msg="Memoization caches will be garbage-collected if they have not been hit after" gcAfterNotHitDuration=30s
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.655Z" level=info msg="not enabling pprof debug endpoints"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.659Z" level=debug msg="Get configmaps 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.662Z" level=info msg="Configuration:\nartifactRepository:\n  s3:\n    accessKeySecret:\n      key: accesskey\n      name: my-minio-cred\n    bucket: my-bucket\n    endpoint: minio:9000\n    insecure: true\n    secretKeySecret:\n      key: secretkey\n      name: my-minio-cred\ncolumns:\n- key: workflows.argoproj.io/completed\n  name: Workflow Completed\n  type: label\nexecutor:\n  imagePullPolicy: IfNotPresent\n  name: \"\"\n  resources:\n    limits:\n      cpu: 500m\n      memory: 128Mi\n    requests:\n      cpu: 100m\n      memory: 64Mi\nimages:\n  docker/whalesay:latest:\n    cmd:\n    - cowsay\ninitialDelay: 0s\nlinks:\n- name: Workflow Link\n  scope: workflow\n  url: http://logging-facility?namespace=${metadata.namespace}&workflowName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Pod Link\n  scope: pod\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Pod Logs Link\n  scope: pod-logs\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Event Source Logs Link\n  scope: event-source-logs\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Sensor Logs Link\n  scope: sensor-logs\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Completed Workflows\n  scope: workflow-list\n  url: http://workflows?label=workflows.argoproj.io/completed=true\nmetricsConfig:\n  enabled: true\n  path: /metrics\n  port: 9090\nnamespaceParallelism: 10\nnodeEvents: {}\npodSpecLogStrategy: {}\nretentionPolicy:\n  completed: 10\n  errored: 2\n  failed: 2\nsso:\n  clientId:\n    key: \"\"\n  clientSecret:\n    key: \"\"\n  issuer: \"\"\n  redirectUrl: \"\"\n  sessionExpiry: 0s\ntelemetryConfig: {}\nworkflowDefaults:\n  metadata:\n    creationTimestamp: null\n  spec:\n    activeDeadlineSeconds: 300\n    arguments: {}\n    podSpecPatch: |\n      terminationGracePeriodSeconds: 3\n  status:\n    finishedAt: null\n    startedAt: null\n"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.662Z" level=info msg="Persistence configuration disabled"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.662Z" level=info executorImage="quay.io/argoproj/argoexec:latest" executorImagePullPolicy=IfNotPresent managedNamespace=argo
+17:59:03 workflow-controller.1 | I0422 17:59:03.662344  227544 leaderelection.go:248] attempting to acquire leader lease argo/workflow-controller...
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.662Z" level=info msg="Starting dummy metrics server at localhost:9090/metrics"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.663Z" level=debug msg="Get leases 200"
+17:59:03 argo-server.1         | time="2024-04-22T17:59:03.665Z" level=debug msg="CLI version" version="{v0.0.0+unknown 1970-01-01T00:00:00Z    go1.21.8 gc linux/amd64}"
+17:59:03 argo-server.1         | time="2024-04-22T17:59:03.665Z" level=info msg="not enabling pprof debug endpoints"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.666Z" level=debug msg="Update leases 200"
+17:59:03 workflow-controller.1 | I0422 17:59:03.666307  227544 leaderelection.go:258] successfully acquired lease argo/workflow-controller
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.666Z" level=info msg="new leader" leader=local
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.666Z" level=debug msg="Event(v1.ObjectReference{Kind:\"Lease\", Namespace:\"argo\", Name:\"workflow-controller\", UID:\"2e9a241b-207b-4f3e-b7b2-c95e51698305\", APIVersion:\"coordination.k8s.io/v1\", ResourceVersion:\"83869\", FieldPath:\"\"}): type: 'Normal' reason: 'LeaderElection' local became leader"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.666Z" level=info msg="Successfully shutdown dummy metrics server at localhost:9090/metrics"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.666Z" level=info msg="DB migration is disabled"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.666Z" level=info msg="Starting Workflow Controller" defaultRequeueTime=1s version=v0.0.0+unknown
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.666Z" level=info msg="Current Worker Numbers" podCleanup=4 workflowTtlWorkers=4 workflowWorkers=32
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.666Z" level=info msg="Watching task results" labelSelector="!workflows.argoproj.io/controller-instanceid,workflows.argoproj.io/workflow"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.667Z" level=info msg=Plugins executorPlugins=false
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.667Z" level=info msg="Starting prometheus metrics server at localhost:9090/metrics"
+17:59:03 argo-server.1         | time="2024-04-22T17:59:03.667Z" level=info authModes="[hybrid]" baseHRef=/ managedNamespace=argo namespace=argo secure=false ssoNamespace=argo
+17:59:03 argo-server.1         | time="2024-04-22T17:59:03.667Z" level=warning msg="You are running in insecure mode. Learn how to enable transport layer security: https://argoproj.github.io/argo-workflows/tls/"
+17:59:03 argo-server.1         | time="2024-04-22T17:59:03.667Z" level=info msg="SSO disabled"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.668Z" level=debug msg="Get leases 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.669Z" level=debug msg="List workflows 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.670Z" level=debug msg="Create events 201"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.670Z" level=debug msg="Update leases 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.671Z" level=info msg="Manager initialized successfully"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.671Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates verb=get
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.672Z" level=debug msg="Watch configmaps 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.672Z" level=debug msg="List configmaps 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.672Z" level=debug msg="Create selfsubjectaccessreviews 201"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.672Z" level=debug msg="received config map argo/my-config-memo-step update"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.673Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates status="{true false  }" verb=get
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.673Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates verb=list
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.673Z" level=debug msg="List pods 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.674Z" level=debug msg="List workflowtasksets 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.674Z" level=debug msg="List workflowartifactgctasks 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.674Z" level=debug msg="Watch configmaps 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.674Z" level=debug msg="Create selfsubjectaccessreviews 201"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.674Z" level=debug msg="List workflowtemplates 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.674Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates status="{true false  }" verb=list
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.674Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates verb=watch
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.674Z" level=debug msg="received config map argo/workflow-controller-configmap update"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.674Z" level=info msg="Received Workflow Controller config map argo/workflow-controller-configmap update"
+17:59:03 argo-server.1         | time="2024-04-22T17:59:03.675Z" level=info msg="Starting Argo Server" instanceID= version=v0.0.0+unknown
+17:59:03 argo-server.1         | time="2024-04-22T17:59:03.675Z" level=info msg="Creating event controller" asyncDispatch=false operationQueueSize=16 workerCount=4
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.675Z" level=debug msg="Watch workflowtemplates 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.675Z" level=debug msg="List workflows 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.675Z" level=debug msg="Create selfsubjectaccessreviews 201"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.675Z" level=debug msg=CanI name= namespace=argo resource=clusterworkflowtemplates status="{true false  }" verb=watch
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.675Z" level=debug msg="Watch workflowtasksets 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.675Z" level=debug msg="Watch workflowartifactgctasks 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.675Z" level=debug msg="Watch pods 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.676Z" level=debug msg="Get configmaps 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.676Z" level=debug msg="Watch workflows 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.676Z" level=debug msg="List workflowtaskresults 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.676Z" level=info msg="Configuration:\nartifactRepository:\n  s3:\n    accessKeySecret:\n      key: accesskey\n      name: my-minio-cred\n    bucket: my-bucket\n    endpoint: minio:9000\n    insecure: true\n    secretKeySecret:\n      key: secretkey\n      name: my-minio-cred\ncolumns:\n- key: workflows.argoproj.io/completed\n  name: Workflow Completed\n  type: label\nexecutor:\n  imagePullPolicy: IfNotPresent\n  name: \"\"\n  resources:\n    limits:\n      cpu: 500m\n      memory: 128Mi\n    requests:\n      cpu: 100m\n      memory: 64Mi\nimages:\n  docker/whalesay:latest:\n    cmd:\n    - cowsay\ninitialDelay: 0s\nlinks:\n- name: Workflow Link\n  scope: workflow\n  url: http://logging-facility?namespace=${metadata.namespace}&workflowName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Pod Link\n  scope: pod\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Pod Logs Link\n  scope: pod-logs\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Event Source Logs Link\n  scope: event-source-logs\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Sensor Logs Link\n  scope: sensor-logs\n  url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}\n- name: Completed Workflows\n  scope: workflow-list\n  url: http://workflows?label=workflows.argoproj.io/completed=true\nmetricsConfig:\n  enabled: true\n  path: /metrics\n  port: 9090\nnamespaceParallelism: 10\nnodeEvents: {}\npodSpecLogStrategy: {}\nretentionPolicy:\n  completed: 10\n  errored: 2\n  failed: 2\nsso:\n  clientId:\n    key: \"\"\n  clientSecret:\n    key: \"\"\n  issuer: \"\"\n  redirectUrl: \"\"\n  sessionExpiry: 0s\ntelemetryConfig: {}\nworkflowDefaults:\n  metadata:\n    creationTimestamp: null\n  spec:\n    activeDeadlineSeconds: 300\n    arguments: {}\n    podSpecPatch: |\n      terminationGracePeriodSeconds: 3\n  status:\n    finishedAt: null\n    startedAt: null\n"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.676Z" level=info msg="Persistence configuration disabled"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.676Z" level=info executorImage="quay.io/argoproj/argoexec:latest" executorImagePullPolicy=IfNotPresent managedNamespace=argo
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.676Z" level=debug msg="received config map argo/my-config-memo-step-no-out update"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.676Z" level=debug msg="received config map argo/my-config-memo-dag update"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.676Z" level=debug msg="Watch workflowtaskresults 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.677Z" level=debug msg="received config map argo/simple-parameters update"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.677Z" level=debug msg="received config map argo/kube-root-ca.crt update"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.677Z" level=debug msg="List clusterworkflowtemplates 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.677Z" level=debug msg="received config map argo/artifact-repositories update"
+17:59:03 argo-server.1         | time="2024-04-22T17:59:03.677Z" level=info msg="GRPC Server Max Message Size, MaxGRPCMessageSize, is set" GRPC_MESSAGE_SIZE=104857600
+17:59:03 argo-server.1         | time="2024-04-22T17:59:03.677Z" level=info msg="Argo Server started successfully on http://localhost:2746" url="http://localhost:2746"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.677Z" level=debug msg="Watch clusterworkflowtemplates 200"
+17:59:03 ui.1                  | yarn run v1.22.19
+17:59:03 ui.1                  | $ NODE_OPTIONS='--no-experimental-fetch --openssl-legacy-provider' webpack-dev-server --config ./src/app/webpack.config.js
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.776Z" level=info msg="Performing periodic GC" periodicity=30s
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.776Z" level=info msg="Persistence disabled - so archived workflow GC disabled - you must restart the controller if you enable this"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.776Z" level=debug msg="Check the workflow existence"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.776Z" level=info msg="Starting workflow garbage collector controller (retentionWorkers 4)"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.776Z" level=info msg="Starting CronWorkflow controller"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.776Z" level=info msg="Started workflow garbage collection"
+17:59:03 workflow-controller.1 | W0422 17:59:03.776426  227544 shared_informer.go:401] The sharedIndexInformer has started, run more than once is not allowed
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.776Z" level=debug msg="Syncing all CronWorkflows"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.777Z" level=debug msg="List cronworkflows 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.777Z" level=debug msg="List workflows 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.778Z" level=debug msg="Watch cronworkflows 200"
+17:59:03 workflow-controller.1 | time="2024-04-22T17:59:03.778Z" level=debug msg="Watch workflows 200"
+17:59:03 ui.1                  | Bundling for development...
+17:59:04 ui.1                  | <i> [webpack-dev-server] [HPM] Proxy created: /api/v1  -> http://localhost:2746
+17:59:04 ui.1                  | <i> [webpack-dev-server] [HPM] Proxy created: /artifact-files  -> http://localhost:2746
+17:59:04 ui.1                  | <i> [webpack-dev-server] [HPM] Proxy created: /artifacts  -> http://localhost:2746
+17:59:04 ui.1                  | <i> [webpack-dev-server] [HPM] Proxy created: /input-artifacts  -> http://localhost:2746
+17:59:04 ui.1                  | <i> [webpack-dev-server] [HPM] Proxy created: /artifacts-by-uid  -> http://localhost:2746
+17:59:04 ui.1                  | <i> [webpack-dev-server] [HPM] Proxy created: /input-artifacts-by-uid  -> http://localhost:2746
+17:59:04 ui.1                  | <i> [webpack-dev-server] [HPM] Proxy created: /oauth2  -> http://localhost:2746
+17:59:04 ui.1                  | <i> [webpack-dev-server] Project is running at:
+17:59:04 ui.1                  | <i> [webpack-dev-server] Loopback: http://localhost:8080/
+17:59:04 ui.1                  | <i> [webpack-dev-server] On Your Network (IPv4): http://192.168.50.228:8080/
+17:59:04 ui.1                  | <i> [webpack-dev-server] Content not from webpack is served from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/public' directory
+17:59:04 ui.1                  | <i> [webpack-dev-server] 404s will fallback to '/index.html'
+17:59:05 ui.1                  | <i> [webpack-dev-middleware] wait until bundle finished: /api/v1/workflow-templates/argo?
+17:59:05 ui.1                  | <i> [webpack-dev-middleware] wait until bundle finished: /api/v1/cron-workflows/argo?
+17:59:05 ui.1                  | <i> [webpack-dev-middleware] wait until bundle finished: /api/v1/workflows/argo?listOptions.limit=52&fields=metadata,items.metadata.uid,items.metadata.name,items.metadata.namespace,items.metadata.creationTimestamp,items.metadata.labels,items.metadata.annotations,items.status.phase,items.status.message,items.status.finishedAt,items.status.startedAt,items.status.estimatedDuration,items.status.progress,items.spec.suspend
+17:59:08 workflow-controller.1 | time="2024-04-22T17:59:08.674Z" level=debug msg="Get leases 200"
+17:59:08 workflow-controller.1 | time="2024-04-22T17:59:08.677Z" level=debug msg="Update leases 200"
+17:59:13 workflow-controller.1 | time="2024-04-22T17:59:13.680Z" level=debug msg="Get leases 200"
+17:59:13 workflow-controller.1 | time="2024-04-22T17:59:13.682Z" level=debug msg="Update leases 200"
+17:59:13 workflow-controller.1 | time="2024-04-22T17:59:13.776Z" level=debug msg="Syncing all CronWorkflows"
+17:59:16 ui.1                  | assets by path assets/ 2.39 MiB
+17:59:16 ui.1                  |   assets by path assets/fonts/ 1.16 MiB 12 assets
+17:59:16 ui.1                  |   assets by path assets/images/*.png 87.6 KiB 4 assets
+17:59:16 ui.1                  |   assets by path assets/favicon/ 4.17 KiB 3 assets
+17:59:16 ui.1                  |   asset assets/openapi-spec/swagger.json 673 KiB [emitted] [from: ../api/openapi-spec/swagger.json] [copied]
+17:59:16 ui.1                  |   asset assets/jsonschema/schema.json 499 KiB [emitted] [from: ../api/jsonschema/schema.json] [copied]
+17:59:16 ui.1                  | assets by path *.js 22 MiB
+17:59:16 ui.1                  |   assets by info 20.1 MiB [immutable]
+17:59:16 ui.1                  |     assets by chunk 13.1 MiB (id hint: vendors) 6 assets
+17:59:16 ui.1                  |     + 3 assets
+17:59:16 ui.1                  |   asset json.worker.js 1.09 MiB [emitted] 1 related asset
+17:59:16 ui.1                  |   asset editor.worker.js 852 KiB [emitted] 1 related asset
+17:59:16 ui.1                  | asset codicon.ttf 71.9 KiB [emitted] [from: node_modules/monaco-editor/min/vs/base/browser/ui/codicons/codicon/codicon.ttf] [copied]
+17:59:16 ui.1                  | asset index.html 530 bytes [emitted]
+17:59:16 ui.1                  | orphan modules 168 KiB [orphan] 172 modules
+17:59:16 ui.1                  | runtime modules 32.6 KiB 19 modules
+17:59:16 ui.1                  | modules by path ./node_modules/ 15.1 MiB 2767 modules
+17:59:16 ui.1                  | modules by path ./src/ 1000 KiB
+17:59:16 ui.1                  |   modules by path ./src/app/ 986 KiB 272 modules
+17:59:16 ui.1                  |   modules by path ./src/models/*.ts 13.9 KiB
+17:59:16 ui.1                  |     ./src/models/index.ts 1.39 KiB [built] [code generated]
+17:59:16 ui.1                  |     ./src/models/events.ts 1.02 KiB [built] [code generated]
+17:59:16 ui.1                  |     ./src/models/info.ts 1.01 KiB [built] [code generated]
+17:59:16 ui.1                  |     ./src/models/labels.ts 1.02 KiB [built] [code generated]
+17:59:16 ui.1                  |     ./src/models/workflows.ts 2.83 KiB [built] [code generated]
+17:59:16 ui.1                  |     + 6 modules
+17:59:16 ui.1                  | semver (ignored) 15 bytes [built] [code generated]
+17:59:16 ui.1                  | fs (ignored) 15 bytes [built] [code generated]
+17:59:16 ui.1                  | ./util.inspect (ignored) 15 bytes [built] [code generated]
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/styles/main.scss (./node_modules/raw-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./node_modules/argo-ui/src/styles/main.scss)
+17:59:16 ui.1                  | Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+17:59:16 ui.1                  | Deprecation Passing percentage units to the global abs() function is deprecated.
+17:59:16 ui.1                  | In the future, this will emit a CSS abs() function to be resolved by the browser.
+17:59:16 ui.1                  | To preserve current behavior: math.abs(1%)
+17:59:16 ui.1                  | To emit a CSS abs() now: abs(#{1%})
+17:59:16 ui.1                  | More info: https://sass-lang.com/d/abs-percent
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_math.scss 159:13        divide()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_unit.scss 21:11         strip-unit()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_math.scss 84:16         zf-parse-fraction()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_math.scss 130:12        fraction-to-percentage()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/grid/_column.scss 19:11       grid-column()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/grid/_flex-grid.scss 67:16    flex-grid-column()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/grid/_flex-grid.scss 225:19   @content
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_mixins.scss 276:5       @content
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_mixins.scss 328:9       @content
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_breakpoint.scss 181:11  breakpoint()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_mixins.scss 327:7       -zf-each-breakpoint-in()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_mixins.scss 275:3       -zf-each-breakpoint()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/grid/_flex-grid.scss 190:3    foundation-flex-grid()
+17:59:16 ui.1                  | node_modules/argo-ui/src/styles/main.scss 12:1                   root stylesheet
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/styles/main.scss 2:26-115 53:4-74:5 56:18-107
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/components/index.ts 1:0-30
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/styles/main.scss (./node_modules/raw-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./node_modules/argo-ui/src/styles/main.scss)
+17:59:16 ui.1                  | Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+17:59:16 ui.1                  | Deprecation Passing percentage units to the global abs() function is deprecated.
+17:59:16 ui.1                  | In the future, this will emit a CSS abs() function to be resolved by the browser.
+17:59:16 ui.1                  | To preserve current behavior: math.abs(100%)
+17:59:16 ui.1                  | To emit a CSS abs() now: abs(#{100%})
+17:59:16 ui.1                  | More info: https://sass-lang.com/d/abs-percent
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_math.scss 158:14   divide()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_unit.scss 42:12    rem-calc()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/forms/_forms.scss 11:16  @import
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/foundation.scss 28:9     @import
+17:59:16 ui.1                  | node_modules/argo-ui/src/styles/main.scss 4:9               root stylesheet
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/styles/main.scss 2:26-115 53:4-74:5 56:18-107
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/components/index.ts 1:0-30
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/styles/main.scss (./node_modules/raw-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./node_modules/argo-ui/src/styles/main.scss)
+17:59:16 ui.1                  | Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+17:59:16 ui.1                  | Deprecation Passing percentage units to the global abs() function is deprecated.
+17:59:16 ui.1                  | In the future, this will emit a CSS abs() function to be resolved by the browser.
+17:59:16 ui.1                  | To preserve current behavior: math.abs(100%)
+17:59:16 ui.1                  | To emit a CSS abs() now: abs(#{100%})
+17:59:16 ui.1                  | More info: https://sass-lang.com/d/abs-percent
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_math.scss 159:13   divide()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/util/_unit.scss 42:12    rem-calc()
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/forms/_forms.scss 11:16  @import
+17:59:16 ui.1                  | node_modules/foundation-sites/scss/foundation.scss 28:9     @import
+17:59:16 ui.1                  | node_modules/argo-ui/src/styles/main.scss 4:9               root stylesheet
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/styles/main.scss 2:26-115 53:4-74:5 56:18-107
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/components/index.ts 1:0-30
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/components/index.ts 4:0-66
+17:59:16 ui.1                  | export 'PageContextProps' (reexported as 'PageContextProps') was not found in './page/page' (possible exports: Page, PageContext)
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/components/index.ts 7:0-76
+17:59:16 ui.1                  | export 'DropDownMenuProps' (reexported as 'DropDownMenuProps') was not found in './dropdown-menu' (possible exports: DropDownMenu)
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/components/index.ts 7:0-76
+17:59:16 ui.1                  | export 'MenuItem' (reexported as 'MenuItem') was not found in './dropdown-menu' (possible exports: DropDownMenu)
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/components/index.ts 9:0-71
+17:59:16 ui.1                  | export 'TopBarProps' (reexported as 'TopBarProps') was not found in './top-bar/top-bar' (possible exports: TopBar)
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/components/index.ts 9:0-71
+17:59:16 ui.1                  | export 'Toolbar' (reexported as 'Toolbar') was not found in './top-bar/top-bar' (possible exports: TopBar)
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/components/index.ts 9:0-71
+17:59:16 ui.1                  | export 'TopBarFilter' (reexported as 'TopBarFilter') was not found in './top-bar/top-bar' (possible exports: TopBar)
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/components/index.ts 10:0-40
+17:59:16 ui.1                  | export 'Tab' (reexported as 'Tab') was not found in './tabs/tabs' (possible exports: Tabs)
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/components/index.ts 18:0-68
+17:59:16 ui.1                  | export 'SelectOption' (reexported as 'SelectOption') was not found in './select/select' (possible exports: Select)
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/argo-ui/src/components/index.ts 18:0-68
+17:59:16 ui.1                  | export 'SelectProps' (reexported as 'SelectProps') was not found in './select/select' (possible exports: Select)
+17:59:16 ui.1                  |  @ ./node_modules/argo-ui/src/index.ts 2:0-29 2:0-29
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 1:0-80 8:27-39 9:35-55 10:32-49
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./src/models/index.ts 9:0-45
+17:59:16 ui.1                  | export 'EventSource' (reexported as 'EventSource') was not found in './event-source' (possible exports: EventSourceTypes)
+17:59:16 ui.1                  |  @ ./src/app/shared/utils.ts 12:0-42 20:17-33 21:17-34 24:17-37 27:17-35 30:17-35
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 47:0-39 81:4-27 88:12-31 89:25-47 94:12-34 95:25-47 103:26-48 195:28-50
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./src/models/index.ts 10:0-46
+17:59:16 ui.1                  | export 'Sensor' (reexported as 'Sensor') was not found in './sensor' (possible exports: TriggerTypes)
+17:59:16 ui.1                  |  @ ./src/app/shared/utils.ts 12:0-42 20:17-33 21:17-34 24:17-37 27:17-35 30:17-35
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 47:0-39 81:4-27 88:12-31 89:25-47 94:12-34 95:25-47 103:26-48 195:28-50
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./src/models/index.ts 10:0-46
+17:59:16 ui.1                  | export 'SensorList' (reexported as 'SensorList') was not found in './sensor' (possible exports: TriggerTypes)
+17:59:16 ui.1                  |  @ ./src/app/shared/utils.ts 12:0-42 20:17-33 21:17-34 24:17-37 27:17-35 30:17-35
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 47:0-39 81:4-27 88:12-31 89:25-47 94:12-34 95:25-47 103:26-48 195:28-50
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/anchor-tag-builder.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/anchor-tag-builder.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/anchor-tag-builder.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 9:0-37 9:0-37
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/autolinker.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/autolinker.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/autolinker.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/html-tag.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/html-tag.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/html-tag.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 10:0-27 10:0-27
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/htmlParser/parse-html.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/htmlParser/parse-html.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/htmlParser/parse-html.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 17:0-52 609:8-17
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/index.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/index.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/index.ts'
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/match/email-match.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/email-match.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/email-match.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 5:0-49 949:15-25
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/match/hashtag-match.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/hashtag-match.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/hashtag-match.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 6:0-53 950:17-29
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/match/index.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/index.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/index.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 11:0-30 11:0-30
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/match/match.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/match.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/match.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 4:0-38 951:15-20
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/match/mention-match.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/mention-match.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/mention-match.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 7:0-53 952:17-29
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/match/phone-match.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/phone-match.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/phone-match.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 8:0-49 953:15-25
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/match/url-match.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/url-match.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/match/url-match.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 9:0-45 954:13-21
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/matcher/email-matcher.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/email-matcher.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/email-matcher.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 12:0-55 866:20-32 937:15-27
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/matcher/hashtag-matcher.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/hashtag-matcher.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/hashtag-matcher.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 14:0-76 430:33-56 862:20-34 938:17-31
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/matcher/index.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/index.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/index.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 12:0-32 12:0-32
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/matcher/matcher.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/matcher.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/matcher.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 10:0-44 939:17-24
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/matcher/mention-matcher.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/mention-matcher.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/mention-matcher.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 16:0-59 868:20-34 940:17-31
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/matcher/phone-matcher.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/phone-matcher.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/phone-matcher.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 15:0-55 867:20-32 941:15-27
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/matcher/tld-regex.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/tld-regex.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/tld-regex.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/matcher/email-matcher.js 6:0-39 15:43-58
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 12:0-55 866:20-32 937:15-27
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/matcher/url-match-validator.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/url-match-validator.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/url-match-validator.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/matcher/url-matcher.js 6:0-58 143:17-42
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 13:0-51 872:20-30 942:13-23
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/matcher/url-matcher.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/url-matcher.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/matcher/url-matcher.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 13:0-51 872:20-30 942:13-23
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/regex-lib.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/regex-lib.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/regex-lib.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/matcher/email-matcher.js 3:0-81 14:47-75 193:16-40 208:21-45 222:21-45 235:21-45
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 12:0-55 866:20-32 937:15-27
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/truncate/truncate-end.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/truncate/truncate-end.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/truncate/truncate-end.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/anchor-tag-builder.js 4:0-54 169:19-30
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 9:0-37 9:0-37
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/truncate/truncate-middle.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/truncate/truncate-middle.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/truncate/truncate-middle.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/anchor-tag-builder.js 3:0-60 166:19-33
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 9:0-37 9:0-37
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/truncate/truncate-smart.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/truncate/truncate-smart.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/truncate/truncate-smart.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/anchor-tag-builder.js 2:0-58 163:19-32
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 9:0-37 9:0-37
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/utils.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/utils.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/utils.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/html-tag.js 1:0-34 191:16-23 207:22-29
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 10:0-27 10:0-27
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | WARNING in ./node_modules/autolinker/dist/es2015/version.js
+17:59:16 ui.1                  | Module Warning (from ./node_modules/source-map-loader/dist/cjs.js):
+17:59:16 ui.1                  | Failed to parse source map from '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/version.ts' file: Error: ENOENT: no such file or directory, open '/home/isithas/go/src/github.com/argoproj/argo-workflows/ui/node_modules/autolinker/src/version.ts'
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/autolinker.js 1:0-36 921:25-32
+17:59:16 ui.1                  |  @ ./node_modules/autolinker/dist/es2015/index.js 5:0-38 6:15-25 7:0-22 8:0-29 8:0-29
+17:59:16 ui.1                  |  @ ./node_modules/remarkable/dist/esm/linkify.js 1:0-36 21:23-33
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/swagger-ui-es-bundle-core.js 2:49-86 2:11290-11299
+17:59:16 ui.1                  |  @ ./node_modules/swagger-ui-react/index.js 15:0-63 61:15-35 68:53-86 193:20-48 194:20-48
+17:59:16 ui.1                  |  @ ./src/app/apidocs/components/apiDocs.tsx 26:11-80
+17:59:16 ui.1                  |  @ ./src/app/apidocs/index.tsx 1:0-47 3:15-22
+17:59:16 ui.1                  |  @ ./src/app/app-router.tsx 32:0-32 192:113-130
+17:59:16 ui.1                  |  @ ./src/app/app.tsx 4:0-41 18:28-37
+17:59:16 ui.1                  |  @ ./src/app/index.tsx 8:25-49 3:0-28 4:36-39
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | 27 warnings have detailed information that is not shown.
+17:59:16 ui.1                  | Use 'stats.errorDetails: true' resp. '--stats-error-details' to show it.
+17:59:16 ui.1                  | 
+17:59:16 ui.1                  | webpack 5.88.2 compiled with 42 warnings in 12046 ms
+17:59:16 argo-server.1         | time="2024-04-22T17:59:16.673Z" level=info msg="finished unary call with code OK" grpc.code=OK grpc.method=ListWorkflowTemplates grpc.service=workflowtemplate.WorkflowTemplateService grpc.start_time="2024-04-22T17:59:16+10:00" grpc.time_ms=3.517 span.kind=server system=grpc
+17:59:16 argo-server.1         | time="2024-04-22T17:59:16.674Z" level=info msg="finished unary call with code OK" grpc.code=OK grpc.method=ListCronWorkflows grpc.service=cronworkflow.CronWorkflowService grpc.start_time="2024-04-22T17:59:16+10:00" grpc.time_ms=4.089 span.kind=server system=grpc
+17:59:16 argo-server.1         | time="2024-04-22T17:59:16.674Z" level=debug msg=CanI name= namespace=argo resource=workflows verb=list
+17:59:16 argo-server.1         | time="2024-04-22T17:59:16.674Z" level=info duration=5.070618ms method=GET path=/api/v1/workflow-templates/argo size=53 status=0
+17:59:16 argo-server.1         | time="2024-04-22T17:59:16.675Z" level=info duration=4.928864ms method=GET path=/api/v1/cron-workflows/argo size=53 status=0
+17:59:16 argo-server.1         | time="2024-04-22T17:59:16.676Z" level=debug msg=CanI name= namespace=argo resource=workflows status="{true false  }" verb=list
+17:59:16 argo-server.1         | time="2024-04-22T17:59:16.676Z" level=info msg="finished unary call with code OK" grpc.code=OK grpc.method=ListWorkflows grpc.service=workflow.WorkflowService grpc.start_time="2024-04-22T17:59:16+10:00" grpc.time_ms=5.872 span.kind=server system=grpc
+17:59:16 argo-server.1         | time="2024-04-22T17:59:16.676Z" level=info duration=6.457325ms method=GET path=/api/v1/workflows/argo size=487 status=0
+17:59:16 argo-server.1         | time="2024-04-22T17:59:16.716Z" level=debug msg="Piping events to channel"
+17:59:18 workflow-controller.1 | time="2024-04-22T17:59:18.684Z" level=debug msg="Get leases 200"
+17:59:18 workflow-controller.1 | time="2024-04-22T17:59:18.686Z" level=debug msg="Update leases 200"
+17:59:23 workflow-controller.1 | time="2024-04-22T17:59:23.689Z" level=debug msg="Get leases 200"
+17:59:23 workflow-controller.1 | time="2024-04-22T17:59:23.691Z" level=debug msg="Update leases 200"
+17:59:23 workflow-controller.1 | time="2024-04-22T17:59:23.776Z" level=debug msg="Syncing all CronWorkflows"
+17:59:28 workflow-controller.1 | time="2024-04-22T17:59:28.694Z" level=debug msg="Get leases 200"
+17:59:28 workflow-controller.1 | time="2024-04-22T17:59:28.696Z" level=debug msg="Update leases 200"
+17:59:33 workflow-controller.1 | time="2024-04-22T17:59:33.699Z" level=debug msg="Get leases 200"
+17:59:33 workflow-controller.1 | time="2024-04-22T17:59:33.701Z" level=debug msg="Update leases 200"
+17:59:33 workflow-controller.1 | time="2024-04-22T17:59:33.777Z" level=debug msg="Syncing all CronWorkflows"
