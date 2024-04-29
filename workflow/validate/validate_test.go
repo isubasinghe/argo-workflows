@@ -641,7 +641,7 @@ func TestGlobalParam(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = validate(unsuppliedArgValue)
-	assert.EqualError(t, err, "spec.arguments.missing.value is required")
+	assert.EqualError(t, err, "spec.arguments.missing.value or spec.arguments.missing.valueFrom is required")
 }
 
 var invalidTemplateNames = `
@@ -1293,7 +1293,8 @@ spec:
 func TestInvalidArgumentNoValue(t *testing.T) {
 	err := validate(invalidArgumentNoValue)
 	if assert.NotNil(t, err) {
-		assert.Contains(t, err.Error(), ".value is required")
+		assert.Contains(t, err.Error(), ".value or ")
+		assert.Contains(t, err.Error(), ".valueFrom is required")
 	}
 }
 
@@ -1710,7 +1711,7 @@ spec:
       image: docker/whalesay
 `)
 	err := ValidateWorkflow(wftmplGetter, cwftmplGetter, wf, ValidateOpts{})
-	assert.EqualError(t, err, "podGC.labelSelector invalid: \"InvalidOperator\" is not a valid pod selector operator")
+	assert.EqualError(t, err, "podGC.labelSelector invalid: \"InvalidOperator\" is not a valid label selector operator")
 }
 
 var allowPlaceholderInVariableTakenFromInputs = `
@@ -1867,7 +1868,7 @@ spec:
       args: ["echo {{inputs.parameters.parameter}}"]
 `
 
-// TestInvalidResourceWorkflow verifies an error against a workflow of an invalid resource.
+// TestRuntimeResolutionOfVariableNames verifies an error against a workflow of an invalid resource.
 func TestRuntimeResolutionOfVariableNames(t *testing.T) {
 	wf := unmarshalWf(runtimeResolutionOfVariableNames)
 	err := ValidateWorkflow(wftmplGetter, cwftmplGetter, wf, ValidateOpts{})
@@ -2710,11 +2711,11 @@ func TestWorkflowTemplateWithArgumentValueNotFromEnumList(t *testing.T) {
 
 func TestWorkflowTemplateWithEnumValueWithoutValue(t *testing.T) {
 	err := validateWorkflowTemplate(workflowTeamplateWithEnumValuesWithoutValue, ValidateOpts{})
-	assert.EqualError(t, err, "spec.arguments.message.value is required")
+	assert.Nil(t, err)
 	err = validateWorkflowTemplate(workflowTeamplateWithEnumValuesWithoutValue, ValidateOpts{Lint: true})
-	assert.EqualError(t, err, "spec.arguments.message.value is required")
+	assert.Nil(t, err)
 	err = validateWorkflowTemplate(workflowTeamplateWithEnumValuesWithoutValue, ValidateOpts{Submit: true})
-	assert.EqualError(t, err, "spec.arguments.message.value is required")
+	assert.EqualError(t, err, "spec.arguments.message.value or spec.arguments.message.valueFrom is required")
 }
 
 var resourceManifestWithExpressions = `
@@ -3317,5 +3318,28 @@ func TestSubstituteGlobalVariablesLabelsAnnotations(t *testing.T) {
 
 			_ = deleteWorkflowTemplate(wftmpl.Name)
 		})
+	}
+}
+
+var spacedParameterWorkflowTemplate = `
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+    generateName: hello-world-
+spec:
+  entrypoint: helloworld
+
+  templates:
+  - name: helloworld
+    container:
+      image: "alpine:3.18"
+      command: ["echo", "{{  workflow.thisdoesnotexist  }}"]
+`
+
+func TestShouldCheckValidationToSpacedParameters(t *testing.T) {
+	err := validate(spacedParameterWorkflowTemplate)
+	// Do not allow leading or trailing spaces in parameters
+	if assert.NotNil(t, err) {
+		assert.Contains(t, err.Error(), "failed to resolve {{  workflow.thisdoesnotexist  }}")
 	}
 }

@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -59,6 +61,17 @@ type CronWorkflowSpec struct {
 	Timezone string `json:"timezone,omitempty" protobuf:"bytes,8,opt,name=timezone"`
 	// WorkflowMetadata contains some metadata of the workflow to be run
 	WorkflowMetadata *metav1.ObjectMeta `json:"workflowMetadata,omitempty" protobuf:"bytes,9,opt,name=workflowMeta"`
+	// StopStrategy defines if the cron workflow will stop being triggered once a certain condition has been reached, involving a number of runs of the workflow
+	StopStrategy *StopStrategy `json:"stopStrategy,omitempty" protobuf:"bytes,10,opt,name=stopStrategy"`
+	// Schedules is a list of schedules to run the Workflow in Cron format
+	Schedules []string `json:"schedules,omitempty" protobuf:"bytes,11,opt,name=schedules"`
+}
+
+// StopStrategy defines if the cron workflow will stop being triggered once a certain condition has been reached, involving a number of runs of the workflow
+type StopStrategy struct {
+	// Condition defines a condition that stops scheduling workflows when evaluates to true. Use the
+	// keywords `failed` or `succeeded` to access the number of failed or successful child workflows.
+	Condition string `json:"condition" protobuf:"bytes,1,opt,name=condition"`
 }
 
 // CronWorkflowStatus is the status of a CronWorkflow
@@ -69,7 +82,20 @@ type CronWorkflowStatus struct {
 	LastScheduledTime *metav1.Time `json:"lastScheduledTime" protobuf:"bytes,2,opt,name=lastScheduledTime"`
 	// Conditions is a list of conditions the CronWorkflow may have
 	Conditions Conditions `json:"conditions" protobuf:"bytes,3,rep,name=conditions"`
+	// Succeeded is a counter of how many times the child workflows had success
+	Succeeded int64 `json:"succeeded" protobuf:"varint,4,rep,name=succeeded"`
+	// Failed is a counter of how many times a child workflow terminated in failed or errored state
+	Failed int64 `json:"failed" protobuf:"varint,5,rep,name=failed"`
+	// Phase defines the cron workflow phase. It is changed to Stopped when the stopping condition is achieved which stops new CronWorkflows from running
+	Phase CronWorkflowPhase `json:"phase" protobuf:"varint,6,rep,name=phase"`
 }
+
+type CronWorkflowPhase string
+
+const (
+	ActivePhase  CronWorkflowPhase = "Active"
+	StoppedPhase CronWorkflowPhase = "Stopped"
+)
 
 func (c *CronWorkflow) IsUsingNewSchedule() bool {
 	lastUsedSchedule, exists := c.Annotations[annotationKeyLatestSchedule]
@@ -85,12 +111,76 @@ func (c *CronWorkflow) SetSchedule(schedule string) {
 	c.Annotations[annotationKeyLatestSchedule] = schedule
 }
 
+func (c *CronWorkflow) SetSchedules(schedules []string) {
+	if c.Annotations == nil {
+		c.Annotations = map[string]string{}
+	}
+	var scheduleString strings.Builder
+	for i, schedule := range schedules {
+		scheduleString.WriteString(schedule)
+		if i != len(schedules)-1 {
+			scheduleString.WriteString(",")
+		}
+	}
+	c.Annotations[annotationKeyLatestSchedule] = scheduleString.String()
+}
+
 func (c *CronWorkflow) GetLatestSchedule() string {
 	return c.Annotations[annotationKeyLatestSchedule]
 }
 
+// GetScheduleString returns the schedule expression with timezone, if available. If multiple
+// expressions are configured it returns a comma separated list of cron expressions
 func (c *CronWorkflowSpec) GetScheduleString() string {
-	scheduleString := c.Schedule
+	var scheduleString string
+	if c.Schedule != "" {
+		scheduleString = c.withTimezone(c.Schedule)
+	} else {
+		var sb strings.Builder
+		for i, schedule := range c.Schedules {
+			sb.WriteString(c.withTimezone(schedule))
+			if i != len(c.Schedules)-1 {
+				sb.WriteString(",")
+			}
+		}
+		scheduleString = sb.String()
+	}
+	return scheduleString
+}
+
+// GetSchedulesWithTimezone returns all schedules configured for the CronWorkflow with a timezone. It handles
+// both Spec.Schedules and Spec.Schedule for backwards compatibility
+func (c *CronWorkflowSpec) GetSchedulesWithTimezone() []string {
+	return c.getSchedules(true)
+}
+
+// GetSchedules returns all schedules configured for the CronWorkflow. It handles both Spec.Schedules
+// and Spec.Schedule for backwards compatibility
+func (c *CronWorkflowSpec) GetSchedules() []string {
+	return c.getSchedules(false)
+}
+
+func (c *CronWorkflowSpec) getSchedules(withTimezone bool) []string {
+	var schedules []string
+	if c.Schedule != "" {
+		schedule := c.Schedule
+		if withTimezone {
+			schedule = c.withTimezone(c.Schedule)
+		}
+		schedules = append(schedules, schedule)
+	} else {
+		schedules = make([]string, len(c.Schedules))
+		for i, schedule := range c.Schedules {
+			if withTimezone {
+				schedule = c.withTimezone(schedule)
+			}
+			schedules[i] = c.withTimezone(schedule)
+		}
+	}
+	return schedules
+}
+
+func (c *CronWorkflowSpec) withTimezone(scheduleString string) string {
 	if c.Timezone != "" {
 		scheduleString = "CRON_TZ=" + c.Timezone + " " + scheduleString
 	}

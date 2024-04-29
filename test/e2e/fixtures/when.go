@@ -33,6 +33,7 @@ type When struct {
 	client            v1alpha1.WorkflowInterface
 	wfebClient        v1alpha1.WorkflowEventBindingInterface
 	wfTemplateClient  v1alpha1.WorkflowTemplateInterface
+	wftsClient        v1alpha1.WorkflowTaskSetInterface
 	cwfTemplateClient v1alpha1.ClusterWorkflowTemplateInterface
 	cronClient        v1alpha1.CronWorkflowInterface
 	hydrator          hydrator.Interface
@@ -258,7 +259,8 @@ func (w *When) WaitForWorkflow(options ...interface{}) *When {
 	for _, opt := range options {
 		switch v := opt.(type) {
 		case time.Duration:
-			timeout = v - 30*time.Second + defaultTimeout
+			// Note that we add the timeoutBias (defaults to 0), set by environment variable E2E_WAIT_TIMEOUT_BIAS
+			timeout = v + timeoutBias
 		case string:
 			workflowName = v
 		case Condition:
@@ -345,6 +347,7 @@ func (w *When) WaitForWorkflowList(listOptions metav1.ListOptions, condition fun
 				return w
 			}
 		}
+		time.Sleep(time.Second)
 	}
 }
 
@@ -413,7 +416,7 @@ func (w *When) WaitForPod(condition PodCondition) *When {
 	timeout := defaultTimeout
 	watch, err := w.kubeClient.CoreV1().Pods(Namespace).Watch(
 		ctx,
-		metav1.ListOptions{LabelSelector: common.LabelKeyWorkflow + "=" + w.wf.Name, TimeoutSeconds: pointer.Int64Ptr(int64(timeout.Seconds()))},
+		metav1.ListOptions{LabelSelector: common.LabelKeyWorkflow + "=" + w.wf.Name, TimeoutSeconds: pointer.Int64(int64(timeout.Seconds()))},
 	)
 	if err != nil {
 		w.t.Fatal(err)
@@ -620,6 +623,7 @@ func (w *When) Then() *Then {
 		wf:          w.wf,
 		cronWf:      w.cronWf,
 		client:      w.client,
+		wftsClient:  w.wftsClient,
 		cronClient:  w.cronClient,
 		hydrator:    w.hydrator,
 		kubeClient:  w.kubeClient,
@@ -633,6 +637,7 @@ func (w *When) Given() *Given {
 		client:            w.client,
 		wfebClient:        w.wfebClient,
 		wfTemplateClient:  w.wfTemplateClient,
+		wftsClient:        w.wftsClient,
 		cwfTemplateClient: w.cwfTemplateClient,
 		cronClient:        w.cronClient,
 		hydrator:          w.hydrator,

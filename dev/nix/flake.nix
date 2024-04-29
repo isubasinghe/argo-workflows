@@ -2,7 +2,7 @@
 
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
     flake-parts = { url = "github:hercules-ci/flake-parts"; inputs.nixpkgs-lib.follows = "nixpkgs"; };
     devenv.url = "github:cachix/devenv";
     nix-filter.url = "github:numtide/nix-filter";
@@ -13,10 +13,10 @@
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
       imports = [ inputs.treefmt-nix.flakeModule ];
-      perSystem = { pkgs, lib, config, ... }:
+      perSystem = { pkgs, lib, config, system, ... }:
         let
           argoConfig = import ./conf.nix;
-          myyarn = pkgs.yarn.override { nodejs = pkgs.nodejs-16_x-openssl_1_1; };
+          myyarn = pkgs.yarn.override { nodejs = pkgs.nodejs_20; };
           filter = inputs.nix-filter.lib;
 
           # dependencies for building the go binaries
@@ -45,7 +45,7 @@
             version = argoConfig.version;
           };
 
-          nodejs = pkgs.nodejs-16_x-openssl_1_1;
+          nodejs = pkgs.nodejs_20;
           nodeEnv = import ./node-env.nix {
             inherit (pkgs) stdenv lib python2 runCommand writeTextFile writeShellScript;
             inherit pkgs nodejs;
@@ -175,30 +175,41 @@
           uiCmd = mkExec "yarn" argoConfig.ui.env argoConfig.ui.args;
         in
         {
+          _module.args = import inputs.nixpkgs {
+            inherit system;
+            overlays = [
+              (self: super: {
+                go = super.go_1_20;
+                buildGoModule = super.buildGo120Module;
+              })
+            ];
+          };
+
           packages = {
             ${package.name} = pkgs.buildGoModule {
               pname = package.name;
               inherit (package) version;
               inherit src;
-              vendorSha256 = "sha256-OKUiHkVZ/rfjPFs7Md5WDa5K1SNJQvLMxlYClUe7Umk=";
+              vendorHash = "sha256-DHqQigUi31GdCFsjvAu1jU1PRNuPW/f3ECrgVd6bvuk=";
               doCheck = false;
             };
 
             mockery = pkgs.buildGoModule rec { 
               pname = "mockery";
-              version = "2.10.0"; # upgrade this in the Makefile if upgraded here
+              version = "2.42.0"; # upgrade this in the Makefile if upgraded here
 
               src = pkgs.fetchFromGitHub {
                 owner = "vektra";
                 repo = "mockery";
-                rev = "v${version}"; # Look 4 lines below this one!!!
-                sha256 = "sha256-udzBhCkESd/5GEJf9oVz0nAQDmsk4tenvDP6tbkBIao=";
+                rev = "v${version}";
+                sha256 = "sha256-wwt7rhHWPlYtvudWKb8vk8t19MeN7AMfMugs0XeBDVk=";
               };
-              ldflags = [
-                "-X github.com/vektra/mockery/v2/pkg/config.SemVer=v${version}"  # IMPERATIVE TO LOOK AT SOURCE CODE WHEN UPDATING VERSION!!!
-              ];
               doCheck = false;
-              vendorHash = "sha256-iuQx2znOh/zsglnJma7Y4YccVArSFul/IOaNh449SpA=";
+              vendorHash = "sha256-J7eL2AQ6v5nG2lZOSSZQOTKBhfk7GtDtqZ7Felo0l54=";
+
+              ldflags = [
+                "-X 'github.com/vektra/mockery/v2/pkg/logging.SemVer=v${version}'" # IMPERATIVE TO ENSURE PATH STAYS THE SAME WHEN VERSION CHANGES
+              ];
             };
 
             protoc-gen-gogo-all = pkgs.buildGoModule rec {
@@ -244,13 +255,13 @@
 
             controller-tools = pkgs.buildGoModule rec {
               pname = "controller-tools";
-              version = "0.4.1"; # upgrade this in the Makefile if upgraded here
+              version = "0.14.0"; # upgrade this in the Makefile if upgraded here
 
               src = pkgs.fetchFromGitHub {
                 owner = "kubernetes-sigs";
                 repo = "controller-tools";
                 rev = "v${version}";
-                sha256 = "sha256-NQlSP9hRLXr+iZo0OeyF1MQs3PourQZN0I0v4Wv5dkE=";
+                sha256 = "sha256-G0jBQ12cpjfWGhXYppV9dB2n68bExi6ME9QbxXsUWvw=";
               };
               vendorHash = "sha256-89hzPiqP++tQpPkcSvzc1tHxHcj5PI71RxxxUCgm0BI=";
               doCheck = false;

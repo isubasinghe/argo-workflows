@@ -22,7 +22,7 @@ func TestPrintWorkflows(t *testing.T) {
 				Arguments: wfv1.Arguments{Parameters: []wfv1.Parameter{
 					{Name: "my-param", Value: wfv1.AnyStringPtr("my-value")},
 				}},
-				Priority: pointer.Int32Ptr(2),
+				Priority: pointer.Int32(2),
 				Templates: []wfv1.Template{
 					{Name: "t0", Container: &corev1.Container{}},
 				},
@@ -50,6 +50,18 @@ func TestPrintWorkflows(t *testing.T) {
 		var b bytes.Buffer
 		assert.NoError(t, PrintWorkflows(emptyWorkflows, &b, PrintOpts{}))
 		assert.Equal(t, `No workflows found
+`, b.String())
+	})
+	t.Run("EmptyJSON", func(t *testing.T) {
+		var b bytes.Buffer
+		assert.NoError(t, PrintWorkflows(emptyWorkflows, &b, PrintOpts{Output: "json"}))
+		assert.Equal(t, `[]
+`, b.String())
+	})
+	t.Run("EmptyYAML", func(t *testing.T) {
+		var b bytes.Buffer
+		assert.NoError(t, PrintWorkflows(emptyWorkflows, &b, PrintOpts{Output: "yaml"}))
+		assert.Equal(t, `[]
 `, b.String())
 	})
 	t.Run("Default", func(t *testing.T) {
@@ -123,20 +135,20 @@ func TestPrintWorkflowCostOptimizationNudges(t *testing.T) {
 		assert.NoError(t, PrintWorkflows(completedWorkflows, &b, PrintOpts{}))
 		assert.Contains(t, b.String(), "\nYou have at least 101 completed workflows. "+
 			"Reducing the total number of workflows will reduce your costs."+
-			"\nLearn more at https://argoproj.github.io/argo-workflows/cost-optimisation/\n")
+			"\nLearn more at https://argo-workflows.readthedocs.io/en/latest/cost-optimisation/\n")
 	})
 	t.Run("CostOptimizationOnIncompleteWorkflows", func(t *testing.T) {
 		var b bytes.Buffer
 		assert.NoError(t, PrintWorkflows(incompleteWorkflows, &b, PrintOpts{}))
 		assert.Contains(t, b.String(), "\nYou have at least 101 incomplete workflows. "+
 			"Reducing the total number of workflows will reduce your costs."+
-			"\nLearn more at https://argoproj.github.io/argo-workflows/cost-optimisation/\n")
+			"\nLearn more at https://argo-workflows.readthedocs.io/en/latest/cost-optimisation/\n")
 	})
 	t.Run("CostOptimizationOnCompletedAndIncompleteWorkflows", func(t *testing.T) {
 		var b bytes.Buffer
 		assert.NoError(t, PrintWorkflows(completedAndIncompleteWorkflows, &b, PrintOpts{}))
 		assert.Contains(t, b.String(), "\nYou have at least 101 incomplete and 101 completed workflows. "+
 			"Reducing the total number of workflows will reduce your costs."+
-			"\nLearn more at https://argoproj.github.io/argo-workflows/cost-optimisation/\n")
+			"\nLearn more at https://argo-workflows.readthedocs.io/en/latest/cost-optimisation/\n")
 	})
 }

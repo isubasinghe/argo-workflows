@@ -1,4 +1,4 @@
-import {NodePhase, Workflow} from '../../models';
+import type {NodePhase, Workflow} from '../../models';
 import {services} from './services';
 import {WorkflowDeleteResponse} from './services/responses';
 import {Utils} from './utils';
@@ -7,7 +7,7 @@ export type OperationDisabled = {
     [action in WorkflowOperationName]: boolean;
 };
 
-type WorkflowOperationName = 'RETRY' | 'RESUBMIT' | 'SUSPEND' | 'RESUME' | 'STOP' | 'TERMINATE' | 'DELETE';
+export type WorkflowOperationName = 'RETRY' | 'RESUBMIT' | 'SUSPEND' | 'RESUME' | 'STOP' | 'TERMINATE' | 'DELETE';
 
 export interface WorkflowOperation {
     title: WorkflowOperationName;

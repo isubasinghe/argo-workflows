@@ -83,7 +83,7 @@ metadata:
     # Must evaluate to a boolean.
     # If you want an account to be the default to use, this rule can be "true".
     # Details of the expression language are available in
-    # https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md.
+    # https://expr-lang.org/docs/language-definition.
     workflows.argoproj.io/rbac-rule: "'admin' in groups"
     # The precedence is used to determine which service account to use whe
     # Precedence is an integer. It may be negative. If omitted, it defaults to "0".
@@ -110,7 +110,7 @@ The precedence must be the lowest of all your service accounts.
 
 As of Kubernetes v1.24, secrets for a service account token are no longer automatically created.
 Therefore, service account secrets for SSO RBAC must be created manually.
-See [Manually create secrets](manually-create-secrets.md) for detailed instructions.
+See [Service Account Secrets](service-account-secrets.md) for detailed instructions.
 
 ## SSO RBAC Namespace Delegation
 
@@ -193,4 +193,22 @@ sso:
 ```bash
 # assuming customClaimGroupName: argo_groups
 workflows.argoproj.io/rbac-rule: "'argo_admins' in groups"
+```
+
+## Filtering groups
+
+> v3.5 and after
+
+You can configure `filterGroupsRegex` to filter the groups returned by the OIDC provider. Some use-cases for this include:
+
+- You have multiple applications using the same OIDC provider, and you only want to use groups that are relevant to Argo Workflows.
+- You have many groups and exceed the [4KB cookie size limit](https://chromestatus.com/feature/4946713618939904) (cookies are used to store authentication tokens). If this occurs, login will fail.
+
+```yaml
+sso:
+    # Specify a list of regular expressions to filter the groups returned by the OIDC provider.
+    # A logical "OR" is used between each regex in the list
+    filterGroupsRegex:
+    - ".*argo-wf.*"
+    - ".*argo-workflow.*"
 ```

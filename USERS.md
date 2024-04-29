@@ -1,10 +1,14 @@
-## Argo Workflows User Community Surveys & Feedback
+# Argo Workflows User Community Surveys & Feedback
 
-Please find [here](https://github.com/argoproj/argoproj/blob/master/community/user_surveys/ArgoWorkflows2020SurveySummary.pdf) Argo Workflows user community 2020 survey results and the 2021 results [here](https://blog.argoproj.io/argo-workflows-2021-survey-results-d6fa890030ee?gi=857daaa1faa9).
+User community survey results are available: [2023](https://blog.argoproj.io/argo-workflows-events-2023-user-survey-results-82c53bc30543), [2021](https://blog.argoproj.io/argo-workflows-2021-survey-results-d6fa890030ee?gi=857daaa1faa9), and [2020](https://github.com/argoproj/argoproj/blob/main/community/user_surveys/ArgoWorkflows2020SurveySummary.pdf).
+
 
 ## Who uses Argo Workflows?
 
 As the Argo Community grows, we'd like to keep track of our users. Please send a PR with your organization or project name in the following sections.
+
+Argo Workflows is seeking more community involvement and ultimately more [Reviewers and Approvers](https://github.com/argoproj/argoproj/blob/main/community/membership.md) to help keep it viable. 
+See [Sustainability Effort](https://github.com/argoproj/argo-workflows/blob/main/community/sustainability_effort.md) for more information. 
 
 ### Organizations Using Argo
 
@@ -27,7 +31,7 @@ Currently, the following organizations are **officially** using Argo Workflows:
 1. [AppDirect](https://www.appdirect.com/)
 1. [Arabesque](https://www.arabesque.com/)
 1. [Argonaut](https://www.argonaut.dev/)
-1. [ArthurAI](https://arthur.ai/) 
+1. [ArthurAI](https://arthur.ai/)
 1. [Astraea](https://astraea.earth/)
 1. [Atlan](https://atlan.com/)
 1. [BasisAI](https://basis-ai.com/)
@@ -48,6 +52,7 @@ Currently, the following organizations are **officially** using Argo Workflows:
 1. [CCRi](https://www.ccri.com/)
 1. [Cisco](https://www.cisco.com/)
 1. [Cloud Scale](https://cloudscaleinc.com/)
+1. [CloudGeometry](https://www.cloudgeometry.io/)
 1. [CloudSeeds](https://www.cloudseeds.de/)
 1. [Codec](https://www.codec.ai/)
 1. [Codefresh](https://www.codefresh.io/)
@@ -71,6 +76,7 @@ Currently, the following organizations are **officially** using Argo Workflows:
 1. [DevSamurai](https://www.devsamurai.com/)
 1. [Devtron Labs](https://github.com/devtron-labs/devtron)
 1. [DLR](https://www.dlr.de/eoc/)
+1. [DP Technology](https://www.dp.tech/)
 1. [Dyno Therapeutics](https://dynotx.com)
 1. [EBSCO Information Services](https://www.ebsco.com/)
 1. [Enso Finance](https://enso.finance/)
@@ -83,7 +89,7 @@ Currently, the following organizations are **officially** using Argo Workflows:
 1. [Fynd Trak](https://trak.fynd.com/)
 1. [Galixir](https://www.galixir.com/)
 1. [Gardener](https://gardener.cloud/)
-2. [Gepardec](https://gepardec.com/)
+1. [Gepardec](https://gepardec.com/)
 1. [GitHub](https://github.com/)
 1. [Gitpod](https://www.gitpod.io/)
 1. [Gladly](https://gladly.com/)
@@ -115,6 +121,7 @@ Currently, the following organizations are **officially** using Argo Workflows:
 1. [KarrotPay](https://www.daangnpay.com/)
 1. [Kasa](https://www.kasa.co.kr/)
 1. [KintoHub](https://www.kintohub.com/)
+1. [KPMG](https://kpmg.com/uk)
 1. [Localytics](https://www.localytics.com/)
 1. [Lumin Digital](https://lumindigital.com/)
 1. [Maersk](https://www.maersk.com/solutions/digital-solutions)
@@ -138,6 +145,7 @@ Currently, the following organizations are **officially** using Argo Workflows:
 1. [Orchest](https://www.orchest.io/)
 1. [OVH](https://www.ovh.com/)
 1. [PathAI](https://www.pathai.com)
+1. [PayIt](https://payitgov.com/)
 1. [PDOK](https://www.pdok.nl/)
 1. [Peak AI](https://www.peak.ai/)
 1. [Phrase](https://phrase.com)
@@ -168,11 +176,13 @@ Currently, the following organizations are **officially** using Argo Workflows:
 1. [Schlumberger](https://slb.com/)
 1. [Securitas](https://securitas.com/)
 1. [SegmentStream](https://segmentstream.com)
+1. [Semgrep](https://semgrep.com)
 1. [Sendible](https://sendible.com)
 1. [Sidecar Technologies](https://hello.getsidecar.com/)
 1. [smallcase](https://smallcase.com/)
 1. [Softonic](https://hello.softonic.com/)
 1. [Sohu](https://www.sohu.com/)
+1. [SternumIOT](https://www.sternumiot.com)
 1. [Stillwater Supercomputing, Inc](http://www.stillwater-sc.com/)
 1. [StreamNative](https://streamnative.io)
 1. [strongDM](https://www.strongdm.com/)

@@ -20,7 +20,7 @@ We maintain release branches for the most recent two minor releases.
 
 Fixes may be back-ported to release branches, depending on severity, risk, and, feasibility.
 
-If a release contains breaking changes, or CVE fixes, this will documented in [upgrading guide](upgrading.md).
+Breaking changes will be documented in [upgrading guide](upgrading.md).
 
 ## Supported Version Skew
 
@@ -28,8 +28,11 @@ Both the `argo-server` and `argocli` should be the same version as the controlle
 
 ## Release Cycle
 
-New minor versions are released roughly every 6 months. Release candidates for each major release are typically available
-for 4-6 weeks before the release becomes generally available.
+New minor versions are released roughly every 6 months.
+
+Release candidates (RCs) for major and minor releases are typically available for 4-6 weeks before the release becomes generally available (GA). Features may be shipped in subsequent release candidates.
+
+When features are shipped in a new release candidate, the most recent release candidate will be available for at least 2 weeks to ensure it is tested sufficiently before it is pushed to GA. If bugs are found with a feature and are not resolved within the 2 week period, the features will be rolled back so as to be saved for the next major/minor release timeline, and a new release candidate will be cut for testing before pushing to GA.
 
 Otherwise, we typically release every two weeks:
 
@@ -38,12 +41,11 @@ Otherwise, we typically release every two weeks:
 
 ## Kubernetes Compatibility Matrix
 
-| Argo Workflows \ Kubernetes | 1.17 | 1.18 | 1.19 | 1.20 | 1.21 | 1.22 | 1.23 | 1.24 | 1.25 | 1.26 | 1.27 |
-|-----------------------|------|------|------|------|------|------|------|------|------|------|------|
-| **3.4**           | `x` | `x` | `x` | `?` | `✓` | `✓` | `✓` | `✓` | `✓` | `✓` | `✓` |
-| **3.3**           | `?` | `?` | `?` | `?` | `✓` | `✓` | `✓` | `?` | `?` | `?` | `?` |
-| **3.2**           | `?` | `?` | `✓` | `✓` | `✓` | `?` | `?` | `?` | `?` | `?` | `?` |
-| **3.1**           | `✓` | `✓` | `✓` | `?` | `?` | `?` | `?` | `?` | `?` | `?` | `?` |
+| Argo Workflows \ Kubernetes | 1.26 | 1.27 | 1.28 | 1.29 | 1.30 |
+|-----------------------|------|------|------|------|------|
+| **3.5**               | `✓` | `✓` | `✓` | `✓` | `?` |
+| **3.4**               | `✓` | `✓` | `?` | `?` | `?` |
+| **3.3**               | `?` | `?` | `?` | `?` | `?` |
 
 * `✓` Fully supported versions.
 * `?` Due to breaking changes might not work. Also, we haven't thoroughly tested against this version.
@@ -53,4 +55,4 @@ Otherwise, we typically release every two weeks:
 
 Argo versions may be compatible with newer and older versions than what it is listed but only three minor versions are supported per Argo release unless otherwise noted.
 
-The main branch of `Argo Workflows` is currently tested on `Kubernetes` 1.27.
+The main branch of `Argo Workflows` is currently tested on `Kubernetes` 1.29.

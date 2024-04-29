@@ -17,8 +17,10 @@ func MergeTo(patch, target *wfv1.Workflow) error {
 	}
 
 	patchHooks := patch.Spec.Hooks
+	// Temporarily remove hooks as they don't merge
 	patch.Spec.Hooks = nil
 	patchWfBytes, err := json.Marshal(patch)
+	patch.Spec.Hooks = patchHooks
 	if err != nil {
 		return err
 	}
@@ -34,6 +36,8 @@ func MergeTo(patch, target *wfv1.Workflow) error {
 	if err != nil {
 		return err
 	}
+
+	target.Spec = wfv1.WorkflowSpec{}
 	err = json.Unmarshal(mergedWfByte, target)
 	if err != nil {
 		return err

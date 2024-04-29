@@ -4,13 +4,18 @@
 package e2e
 
 import (
+	"context"
+	"io"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	"github.com/argoproj/argo-workflows/v3/test/e2e/fixtures"
 )
@@ -23,7 +28,7 @@ func (s *RetryTestSuite) TestRetryLimit() {
 	s.Given().
 		Workflow(`
 metadata:
-  generateName: test-retry-limit-
+  name: test-retry-limit
 spec:
   entrypoint: main
   templates:
@@ -46,6 +51,20 @@ spec:
 		ExpectWorkflow(func(t *testing.T, _ *metav1.ObjectMeta, status *wfv1.WorkflowStatus) {
 			assert.Equal(t, wfv1.WorkflowPhase("Failed"), status.Phase)
 			assert.Equal(t, "No more retries left", status.Message)
+			assert.Equal(t, v1alpha1.Progress("0/1"), status.Progress)
+		}).
+		ExpectWorkflowNode(func(status v1alpha1.NodeStatus) bool {
+			return status.Name == "test-retry-limit"
+		}, func(t *testing.T, status *v1alpha1.NodeStatus, pod *apiv1.Pod) {
+			assert.Equal(t, v1alpha1.NodeFailed, status.Phase)
+			assert.Equal(t, v1alpha1.NodeTypeRetry, status.Type)
+			assert.Nil(t, status.NodeFlag)
+		}).
+		ExpectWorkflowNode(func(status v1alpha1.NodeStatus) bool {
+			return status.Name == "test-retry-limit(0)"
+		}, func(t *testing.T, status *v1alpha1.NodeStatus, pod *apiv1.Pod) {
+			assert.Equal(t, v1alpha1.NodeFailed, status.Phase)
+			assert.Equal(t, true, status.NodeFlag.Retried)
 		})
 }
 
@@ -70,7 +89,7 @@ spec:
 `).
 		When().
 		SubmitWorkflow().
-		WaitForWorkflow(time.Minute).
+		WaitForWorkflow(time.Second * 90).
 		Then().
 		ExpectWorkflow(func(t *testing.T, _ *metav1.ObjectMeta, status *wfv1.WorkflowStatus) {
 			assert.Equal(t, wfv1.WorkflowPhase("Failed"), status.Phase)
@@ -96,12 +115,83 @@ spec:
 `).
 		When().
 		SubmitWorkflow().
-		WaitForWorkflow(time.Minute).
+		WaitForWorkflow(time.Second * 90).
 		Then().
 		ExpectWorkflow(func(t *testing.T, _ *metav1.ObjectMeta, status *wfv1.WorkflowStatus) {
 			assert.Equal(t, wfv1.WorkflowPhase("Failed"), status.Phase)
 			assert.LessOrEqual(t, len(status.Nodes), 10)
 		})
+}
+
+func (s *RetryTestSuite) TestWorkflowTemplateWithRetryStrategyInContainerSet() {
+	var name string
+	var ns string
+	s.Given().
+		WorkflowTemplate("@testdata/workflow-template-with-containerset.yaml").
+		Workflow(`
+metadata:
+  name: workflow-template-containerset
+spec:
+  workflowTemplateRef:
+    name: containerset-with-retrystrategy
+`).
+		When().
+		CreateWorkflowTemplates().
+		SubmitWorkflow().
+		WaitForWorkflow(fixtures.ToBeFailed).
+		Then().
+		ExpectWorkflow(func(t *testing.T, metadata *metav1.ObjectMeta, status *wfv1.WorkflowStatus) {
+			assert.Equal(t, status.Phase, wfv1.WorkflowFailed)
+		}).
+		ExpectWorkflowNode(func(status v1alpha1.NodeStatus) bool {
+			return status.Name == "workflow-template-containerset"
+		}, func(t *testing.T, status *v1alpha1.NodeStatus, pod *apiv1.Pod) {
+			name = pod.GetName()
+			ns = pod.GetNamespace()
+		})
+	// Success, no need retry
+	s.Run("ContainerLogs", func() {
+		ctx := context.Background()
+		podLogOptions := &apiv1.PodLogOptions{Container: "c1"}
+		stream, err := s.KubeClient.CoreV1().Pods(ns).GetLogs(name, podLogOptions).Stream(ctx)
+		assert.Nil(s.T(), err)
+		defer stream.Close()
+		logBytes, err := io.ReadAll(stream)
+		assert.Nil(s.T(), err)
+		output := string(logBytes)
+		count := strings.Count(output, "capturing logs")
+		assert.Equal(s.T(), 1, count)
+		assert.Contains(s.T(), output, "hi")
+	})
+	// Command err. No retry logic is entered.
+	s.Run("ContainerLogs", func() {
+		ctx := context.Background()
+		podLogOptions := &apiv1.PodLogOptions{Container: "c2"}
+		stream, err := s.KubeClient.CoreV1().Pods(ns).GetLogs(name, podLogOptions).Stream(ctx)
+		assert.Nil(s.T(), err)
+		defer stream.Close()
+		logBytes, err := io.ReadAll(stream)
+		assert.Nil(s.T(), err)
+		output := string(logBytes)
+		count := strings.Count(output, "capturing logs")
+		assert.Equal(s.T(), 0, count)
+		assert.Contains(s.T(), output, "executable file not found in $PATH")
+	})
+	// Retry when err.
+	s.Run("ContainerLogs", func() {
+		ctx := context.Background()
+		podLogOptions := &apiv1.PodLogOptions{Container: "c3"}
+		stream, err := s.KubeClient.CoreV1().Pods(ns).GetLogs(name, podLogOptions).Stream(ctx)
+		assert.Nil(s.T(), err)
+		defer stream.Close()
+		logBytes, err := io.ReadAll(stream)
+		assert.Nil(s.T(), err)
+		output := string(logBytes)
+		count := strings.Count(output, "capturing logs")
+		assert.Equal(s.T(), 2, count)
+		countFailureInfo := strings.Count(output, "intentional failure")
+		assert.Equal(s.T(), 2, countFailureInfo)
+	})
 }
 
 func TestRetrySuite(t *testing.T) {

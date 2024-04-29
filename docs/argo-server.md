@@ -18,7 +18,7 @@ Use this mode if:
 * You want a drop-in replacement for the Argo UI.
 * If you need to prevent users from directly accessing the database.
 
-Hosted mode is provided as part of the standard [manifests](https://github.com/argoproj/argo-workflows/blob/master/manifests), [specifically in argo-server-deployment.yaml](https://github.com/argoproj/argo-workflows/blob/master/manifests/base/argo-server/argo-server-deployment.yaml) .
+Hosted mode is provided as part of the standard [manifests](https://github.com/argoproj/argo-workflows/blob/main/manifests), [specifically in `argo-server-deployment.yaml`](https://github.com/argoproj/argo-workflows/blob/main/manifests/base/argo-server/argo-server-deployment.yaml) .
 
 ## Local Mode
 
@@ -133,7 +133,7 @@ Create a ingress, with the annotation `ingress.kubernetes.io/rewrite-target: /`:
 >uses `nginx.ingress.kubernetes.io/backend-protocol`
 
 ```yaml
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: argo-server
@@ -143,12 +143,15 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: https # ingress-nginx
 spec:
   rules:
-    - http:
-        paths:
-          - backend:
-              serviceName: argo-server
-              servicePort: 2746
-            path: /argo(/|$)(.*)
+  - http:
+      paths:
+      - path: /argo(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: argo-server
+            port:
+              number: 2746
 ```
 
 [Learn more](https://github.com/argoproj/argo-workflows/issues/3080)

@@ -5,7 +5,7 @@ import * as React from 'react';
 import {useEffect, useState} from 'react';
 import {Redirect, Route, Router, Switch} from 'react-router';
 import {Version} from '../models';
-import apidocs from './apidocs';
+import apiDocs from './api-docs';
 import clusterWorkflowTemplates from './cluster-workflow-templates';
 import cronWorkflows from './cron-workflows';
 import eventflow from './event-flow';
@@ -43,7 +43,7 @@ const loginUrl = uiUrl('login');
 const timelineUrl = uiUrl('timeline');
 const reportsUrl = uiUrl('reports');
 
-export const AppRouter = ({popupManager, history, notificationsManager}: {popupManager: PopupManager; history: H.History; notificationsManager: NotificationsManager}) => {
+export function AppRouter({popupManager, history, notificationsManager}: {popupManager: PopupManager; history: H.History; notificationsManager: NotificationsManager}) {
     const [popupProps, setPopupProps] = useState<PopupProps>();
     const [modals, setModals] = useState<{string: boolean}>();
     const [version, setVersion] = useState<Version>();
@@ -172,7 +172,7 @@ export const AppRouter = ({popupManager, history, notificationsManager}: {popupM
                                 <Route path={reportsUrl} component={reports.component} />
                                 <Route path={pluginsUrl} component={plugins.component} />
                                 <Route exact={true} strict={true} path={helpUrl} component={help.component} />
-                                <Route exact={true} strict={true} path={apiDocsUrl} component={apidocs.component} />
+                                <Route exact={true} strict={true} path={apiDocsUrl} component={apiDocs.component} />
                                 <Route exact={true} strict={true} path={userInfoUrl} component={userinfo.component} />
                                 <Route exact={true} strict={true} path={loginUrl} component={login.component} />
                                 {Utils.managedNamespace && <Redirect to={workflowsUrl} />}
@@ -186,4 +186,4 @@ export const AppRouter = ({popupManager, history, notificationsManager}: {popupM
             </Router>
         </>
     );
-};
+}

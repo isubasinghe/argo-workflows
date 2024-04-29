@@ -2,31 +2,29 @@ import * as React from 'react';
 import {useContext, useEffect, useState} from 'react';
 
 import {Autocomplete} from 'argo-ui';
-import moment = require('moment-timezone');
 import {Observable} from 'rxjs';
 import {map, publishReplay, refCount} from 'rxjs/operators';
 import * as models from '../../../../models';
 import {execSpec} from '../../../../models';
-import {ANNOTATION_KEY_POD_NAME_VERSION} from '../../../shared/annotations';
 import {Button} from '../../../shared/components/button';
 import {ErrorNotice} from '../../../shared/components/error-notice';
 import {InfoIcon, WarningIcon} from '../../../shared/components/fa-icons';
 import {Links} from '../../../shared/components/links';
 import {Context} from '../../../shared/context';
-import {useLocalStorage} from '../../../shared/hooks/uselocalstorage';
-import {getPodName, getTemplateNameFromNode} from '../../../shared/pod-name';
+import {useLocalStorage} from '../../../shared/use-local-storage';
+import {getPodName} from '../../../shared/pod-name';
 import {ScopedLocalStorage} from '../../../shared/scoped-local-storage';
 import {services} from '../../../shared/services';
 import {FullHeightLogsViewer} from './full-height-logs-viewer';
 import {extractJsonValue, JsonLogsFieldSelector, SelectedJsonFields} from './json-logs-field-selector';
 
 const TZ_LOCALSTORAGE_KEY = 'DEFAULT_TZ';
-
 const DEFAULT_TZ = process.env.DEFAULT_TZ || 'UTC';
+const timezones = Intl.supportedValuesOf('timeZone');
 
 interface WorkflowLogsViewerProps {
     workflow: models.Workflow;
-    nodeId?: string;
+    initialNodeId?: string;
     initialPodName: string;
     container: string;
     archived: boolean;
@@ -48,32 +46,34 @@ interface ParsedTime {
     fullstring: string;
 }
 // extract the time field from a string
-const parseTime = (formattedString: string): undefined | ParsedTime => {
+function parseTime(formattedString: string): undefined | ParsedTime {
     const re = new RegExp('time="(.*?)"');
     const table = re.exec(formattedString);
     if (table === null || table.length !== 2) {
         return undefined;
     }
     return {quoted: table[1], fullstring: table[0]};
-};
+}
 
-const parseAndTransform = (formattedString: string, timezone: string) => {
+function parseAndTransform(formattedString: string, timeZone: string) {
     const maybeTime = parseTime(formattedString);
     if (maybeTime === undefined) {
         return formattedString;
     }
 
     try {
-        const newTime = moment.tz(maybeTime.quoted, timezone).format('YYYY-MM-DDTHH:mm:ss z');
-        const newFormattedTime = `time=\"${newTime}\"`;
+        // hack to get a local ISO time: en-CA locale is very close to ISO (https://en.wikipedia.org/wiki/Date_and_time_notation_in_Canada)
+        const newTime = new Date(maybeTime.quoted).toLocaleString('en-CA', {timeZone, hour12: false}).replace(', ', 'T');
+        const shortTz = new Date().toLocaleTimeString('en-US', {timeZone, timeZoneName: 'short'}).split(' ')[2];
+        const newFormattedTime = `time="${newTime} ${shortTz}"`;
         const newFormattedString = formattedString.replace(maybeTime.fullstring, newFormattedTime);
         return newFormattedString;
     } catch {
         return formattedString;
     }
-};
+}
 
-export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container, archived}: WorkflowLogsViewerProps) => {
+export function WorkflowLogsViewer({workflow, initialNodeId, initialPodName, container, archived}: WorkflowLogsViewerProps) {
     const storage = new ScopedLocalStorage('workflow-logs-viewer');
     const storedJsonFields = storage.getItem('jsonFields', {
         values: []
@@ -90,8 +90,6 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
     const [uiTimezone, setUITimezone] = useState<string>(DEFAULT_TZ);
     // timezone used for timezone formatting
     const [timezone, setTimezone] = useLocalStorage<string>(TZ_LOCALSTORAGE_KEY, DEFAULT_TZ);
-    // list of timezones the moment-timezone library supports
-    const [timezones, setTimezones] = useState<string[]>([]);
 
     // update the UI everytime the timezone changes
     useEffect(() => {
@@ -158,34 +156,21 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
         return () => clearTimeout(x);
     }, [logFilter]);
 
-    useEffect(() => {
-        const tzs = moment.tz.names();
-        const tzsSet = new Set<string>();
-        tzs.forEach(item => {
-            tzsSet.add(item);
-        });
-        const flatTzs = [...tzsSet];
-        setTimezones(flatTzs);
-    }, []);
-
-    const annotations = workflow.metadata.annotations || {};
-    const podNameVersion = annotations[ANNOTATION_KEY_POD_NAME_VERSION];
-
     // map pod names to corresponding node IDs
     const podNamesToNodeIDs = new Map<string, string>();
-
     const podNames = [{value: '', label: 'All'}].concat(
         Object.values(workflow.status.nodes || {})
             .filter(x => x.type === 'Pod')
             .map(targetNode => {
                 const {name, id, displayName} = targetNode;
-                const templateName = getTemplateNameFromNode(targetNode);
-                const targetPodName = getPodName(workflow.metadata.name, name, templateName, id, podNameVersion);
+                const targetPodName = getPodName(workflow, targetNode);
                 podNamesToNodeIDs.set(targetPodName, id);
                 return {value: targetPodName, label: (displayName || name) + ' (' + targetPodName + ')'};
             })
     );
 
+    // default to the node id of the pod
+    const nodeId = initialNodeId || podNamesToNodeIDs.get(podName);
     const node = workflow.status.nodes[nodeId];
     const templates = execSpec(workflow).templates.filter(t => !node || t.name === node.templateName);
 
@@ -202,7 +187,7 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
     const [candidateContainer, setCandidateContainer] = useState(container);
     const filteredTimezones = timezones.filter(tz => tz.startsWith(uiTimezone) || uiTimezone === '');
 
-    const popupJsonFieldSelector = async () => {
+    async function popupJsonFieldSelector() {
         const fields = {...selectedJsonFields};
         const updated = await popup.confirm('Select Json Fields', () => (
             <JsonLogsFieldSelector
@@ -216,7 +201,7 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
             storage.setItem('jsonFields', fields, {values: []});
             setSelectedJsonFields(fields);
         }
-    };
+    }
 
     return (
         <div className='workflow-logs-viewer'>
@@ -308,7 +293,8 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
                 )}
                 {execSpec(workflow).podGC && (
                     <>
-                        <WarningIcon /> Your pod GC settings will delete pods and their logs immediately on completion.
+                        <WarningIcon /> Your pod GC settings will delete pods and their logs{' '}
+                        {execSpec(workflow).podGC.deleteDelayDuration ? `after ${execSpec(workflow).podGC.deleteDelayDuration}` : 'immediately'} on completion.
                     </>
                 )}{' '}
                 Logs may not appear for pods that are deleted.{' '}
@@ -333,4 +319,4 @@ export const WorkflowLogsViewer = ({workflow, nodeId, initialPodName, container,
             </p>
         </div>
     );
-};
+}

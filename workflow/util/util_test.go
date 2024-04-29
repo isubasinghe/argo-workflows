@@ -2,8 +2,10 @@ package util
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,6 +24,7 @@ import (
 	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	argofake "github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned/fake"
 	"github.com/argoproj/argo-workflows/v3/workflow/common"
+	"github.com/argoproj/argo-workflows/v3/workflow/creator"
 	hydratorfake "github.com/argoproj/argo-workflows/v3/workflow/hydrator/fake"
 )
 
@@ -266,30 +269,64 @@ status:
 `
 
 func TestResumeWorkflowByNodeName(t *testing.T) {
-	wfIf := argofake.NewSimpleClientset().ArgoprojV1alpha1().Workflows("")
-	origWf := wfv1.MustUnmarshalWorkflow(suspendedWf)
+	t.Run("Withought user info", func(t *testing.T) {
+		wfIf := argofake.NewSimpleClientset().ArgoprojV1alpha1().Workflows("")
+		origWf := wfv1.MustUnmarshalWorkflow(suspendedWf)
 
-	ctx := context.Background()
-	_, err := wfIf.Create(ctx, origWf, metav1.CreateOptions{})
-	assert.NoError(t, err)
+		ctx := context.Background()
+		_, err := wfIf.Create(ctx, origWf, metav1.CreateOptions{})
+		assert.NoError(t, err)
 
-	// will return error as displayName does not match any nodes
-	err = ResumeWorkflow(ctx, wfIf, hydratorfake.Noop, "suspend", "displayName=nonexistant")
-	assert.Error(t, err)
+		// will return error as displayName does not match any nodes
+		err = ResumeWorkflow(ctx, wfIf, hydratorfake.Noop, "suspend", "displayName=nonexistant")
+		assert.Error(t, err)
 
-	// displayName didn't match suspend node so should still be running
-	wf, err := wfIf.Get(ctx, "suspend", metav1.GetOptions{})
-	assert.NoError(t, err)
-	assert.Equal(t, wfv1.NodeRunning, wf.Status.Nodes.FindByDisplayName("approve").Phase)
+		// displayName didn't match suspend node so should still be running
+		wf, err := wfIf.Get(ctx, "suspend", metav1.GetOptions{})
+		assert.NoError(t, err)
+		assert.Equal(t, wfv1.NodeRunning, wf.Status.Nodes.FindByDisplayName("approve").Phase)
 
-	err = ResumeWorkflow(ctx, wfIf, hydratorfake.Noop, "suspend", "displayName=approve")
-	assert.NoError(t, err)
+		err = ResumeWorkflow(ctx, wfIf, hydratorfake.Noop, "suspend", "displayName=approve")
+		assert.NoError(t, err)
 
-	// displayName matched node so has succeeded
-	wf, err = wfIf.Get(ctx, "suspend", metav1.GetOptions{})
-	if assert.NoError(t, err) {
-		assert.Equal(t, wfv1.NodeSucceeded, wf.Status.Nodes.FindByDisplayName("approve").Phase)
-	}
+		// displayName matched node so has succeeded
+		wf, err = wfIf.Get(ctx, "suspend", metav1.GetOptions{})
+		if assert.NoError(t, err) {
+			assert.Equal(t, wfv1.NodeSucceeded, wf.Status.Nodes.FindByDisplayName("approve").Phase)
+			assert.Equal(t, "", wf.Status.Nodes.FindByDisplayName("approve").Message)
+		}
+	})
+
+	t.Run("With user info", func(t *testing.T) {
+		wfIf := argofake.NewSimpleClientset().ArgoprojV1alpha1().Workflows("")
+		origWf := wfv1.MustUnmarshalWorkflow(suspendedWf)
+
+		ctx := context.WithValue(context.TODO(), auth.ClaimsKey,
+			&types.Claims{Claims: jwt.Claims{Subject: strings.Repeat("x", 63) + "y"}, Email: "my@email", PreferredUsername: "username"})
+		uim := creator.UserInfoMap(ctx)
+
+		_, err := wfIf.Create(ctx, origWf, metav1.CreateOptions{})
+		assert.NoError(t, err)
+
+		// will return error as displayName does not match any nodes
+		err = ResumeWorkflow(ctx, wfIf, hydratorfake.Noop, "suspend", "displayName=nonexistant")
+		assert.Error(t, err)
+
+		// displayName didn't match suspend node so should still be running
+		wf, err := wfIf.Get(ctx, "suspend", metav1.GetOptions{})
+		assert.NoError(t, err)
+		assert.Equal(t, wfv1.NodeRunning, wf.Status.Nodes.FindByDisplayName("approve").Phase)
+
+		err = ResumeWorkflow(ctx, wfIf, hydratorfake.Noop, "suspend", "displayName=approve")
+		assert.NoError(t, err)
+
+		// displayName matched node so has succeeded
+		wf, err = wfIf.Get(ctx, "suspend", metav1.GetOptions{})
+		if assert.NoError(t, err) {
+			assert.Equal(t, wfv1.NodeSucceeded, wf.Status.Nodes.FindByDisplayName("approve").Phase)
+			assert.Equal(t, fmt.Sprintf("Resumed by: %v", uim), wf.Status.Nodes.FindByDisplayName("approve").Message)
+		}
+	})
 }
 
 func TestStopWorkflowByNodeName(t *testing.T) {
@@ -322,7 +359,7 @@ func TestStopWorkflowByNodeName(t *testing.T) {
 	_, err = wfIf.Create(ctx, origWf, metav1.CreateOptions{})
 	assert.NoError(t, err)
 	err = StopWorkflow(ctx, wfIf, hydratorfake.Noop, "succeeded-wf", "", "")
-	assert.EqualError(t, err, "cannot shutdown a completed workflow")
+	assert.EqualError(t, err, "cannot shutdown a completed workflow: workflow: \"succeeded-wf\", namespace: \"\"")
 }
 
 // Regression test for #6478
@@ -1027,7 +1064,7 @@ func TestRetryExitHandler(t *testing.T) {
 func TestFormulateRetryWorkflow(t *testing.T) {
 	ctx := context.Background()
 	wfClient := argofake.NewSimpleClientset().ArgoprojV1alpha1().Workflows("my-ns")
-	createdTime := metav1.Time{Time: time.Now().UTC()}
+	createdTime := metav1.Time{Time: time.Now().Add(-1 * time.Second).UTC()}
 	finishedTime := metav1.Time{Time: createdTime.Add(time.Second * 2)}
 	t.Run("Steps", func(t *testing.T) {
 		wf := &wfv1.Workflow{
@@ -1327,6 +1364,64 @@ func TestFormulateRetryWorkflow(t *testing.T) {
 				assert.Equal(t, wfv1.NodeRunning, wf.Status.Nodes["1"].Phase)
 				assert.Equal(t, wfv1.NodeSucceeded, wf.Status.Nodes["2"].Phase)
 				assert.Equal(t, wfv1.NodeSucceeded, wf.Status.Nodes["3"].Phase)
+			}
+		}
+	})
+
+	t.Run("Retry continue on failed workflow", func(t *testing.T) {
+		wf := &wfv1.Workflow{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   "continue-on-failed-workflow",
+				Labels: map[string]string{},
+			},
+			Status: wfv1.WorkflowStatus{
+				Phase: wfv1.WorkflowFailed,
+				Nodes: map[string]wfv1.NodeStatus{
+					"continue-on-failed-workflow": {ID: "continue-on-failed-workflow", Phase: wfv1.NodeFailed, Type: wfv1.NodeTypeDAG, Children: []string{"1"}, OutboundNodes: []string{"3", "5"}},
+					"1":                           {ID: "1", Phase: wfv1.NodeSucceeded, Type: wfv1.NodeTypePod, BoundaryID: "continue-on-failed-workflow", Children: []string{"2", "4"}, Name: "node1"},
+					"2":                           {ID: "2", Phase: wfv1.NodeFailed, Type: wfv1.NodeTypePod, BoundaryID: "continue-on-failed-workflow", Children: []string{"3"}, Name: "node2"},
+					"3":                           {ID: "3", Phase: wfv1.NodeSucceeded, Type: wfv1.NodeTypePod, BoundaryID: "continue-on-failed-workflow", Name: "node3"},
+					"4":                           {ID: "4", Phase: wfv1.NodeFailed, Type: wfv1.NodeTypePod, BoundaryID: "continue-on-failed-workflow", Children: []string{"5"}, Name: "node4"},
+					"5":                           {ID: "5", Phase: wfv1.NodeOmitted, Type: wfv1.NodeTypeSkipped, BoundaryID: "continue-on-failed-workflow", Name: "node5"}},
+			},
+		}
+		_, err := wfClient.Create(ctx, wf, metav1.CreateOptions{})
+		assert.NoError(t, err)
+		wf, podsToDelete, err := FormulateRetryWorkflow(ctx, wf, false, "", nil)
+		if assert.NoError(t, err) {
+			if assert.Len(t, wf.Status.Nodes, 4) {
+				assert.Equal(t, wfv1.NodeFailed, wf.Status.Nodes["2"].Phase)
+				assert.Equal(t, wfv1.NodeSucceeded, wf.Status.Nodes["3"].Phase)
+				assert.Equal(t, 2, len(podsToDelete))
+			}
+		}
+	})
+
+	t.Run("Retry continue on failed workflow with restartSuccessful and nodeFieldSelector", func(t *testing.T) {
+		wf := &wfv1.Workflow{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   "continue-on-failed-workflow-2",
+				Labels: map[string]string{},
+			},
+			Status: wfv1.WorkflowStatus{
+				Phase: wfv1.WorkflowFailed,
+				Nodes: map[string]wfv1.NodeStatus{
+					"continue-on-failed-workflow-2": {ID: "continue-on-failed-workflow-2", Phase: wfv1.NodeFailed, Type: wfv1.NodeTypeDAG, Children: []string{"1"}, OutboundNodes: []string{"3", "5"}},
+					"1":                             {ID: "1", Phase: wfv1.NodeSucceeded, Type: wfv1.NodeTypePod, BoundaryID: "continue-on-failed-workflow-2", Children: []string{"2", "4"}, Name: "node1"},
+					"2":                             {ID: "2", Phase: wfv1.NodeFailed, Type: wfv1.NodeTypePod, BoundaryID: "continue-on-failed-workflow-2", Children: []string{"3"}, Name: "node2"},
+					"3":                             {ID: "3", Phase: wfv1.NodeSucceeded, Type: wfv1.NodeTypePod, BoundaryID: "continue-on-failed-workflow-2", Name: "node3"},
+					"4":                             {ID: "4", Phase: wfv1.NodeFailed, Type: wfv1.NodeTypePod, BoundaryID: "continue-on-failed-workflow-2", Children: []string{"5"}, Name: "node4"},
+					"5":                             {ID: "5", Phase: wfv1.NodeOmitted, Type: wfv1.NodeTypeSkipped, BoundaryID: "continue-on-failed-workflow-2", Name: "node5"}},
+			},
+		}
+		_, err := wfClient.Create(ctx, wf, metav1.CreateOptions{})
+		assert.NoError(t, err)
+		wf, podsToDelete, err := FormulateRetryWorkflow(ctx, wf, true, "id=3", nil)
+		if assert.NoError(t, err) {
+			if assert.Len(t, wf.Status.Nodes, 2) {
+				assert.Equal(t, wfv1.NodeSucceeded, wf.Status.Nodes["1"].Phase)
+				assert.Equal(t, wfv1.NodeRunning, wf.Status.Nodes["continue-on-failed-workflow-2"].Phase)
+				assert.Equal(t, 4, len(podsToDelete))
 			}
 		}
 	})
