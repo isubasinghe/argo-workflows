@@ -189,6 +189,9 @@ func (woc *cronWfOperationCtx) enforceRuntimePolicy(ctx context.Context) (bool, 
 		return false, nil
 	}
 
+	if woc.cronWf.Spec.When != "" {
+	}
+
 	if woc.cronWf.Spec.ConcurrencyPolicy != "" {
 		switch woc.cronWf.Spec.ConcurrencyPolicy {
 		case v1alpha1.AllowConcurrent, "":
